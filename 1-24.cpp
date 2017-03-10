@@ -41,7 +41,7 @@ int main()
     
     //lambdaÊµÏÖ±Õ°ü
     count = count_if(va.begin(), va.end(), [](uint32_t val){
-        if (val > 2 && val < 6)
+        if (val > 2 && val < 6) 
         {
             return true;
         }
