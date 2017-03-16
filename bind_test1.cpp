@@ -2,7 +2,7 @@
 #include <tr1/functional>
 
 using namespace std;
-
+   
 typedef std::tr1::function<void(int)> HandlerEvent;
 
 struct Shape
