@@ -63,7 +63,8 @@ int main()
     unsigned int a = 10;
     unsigned int b = 20;
     cout << (int)a - (int)b << endl;
-    cout << b - a << endl;
+    cout << a - b << endl;
+    cout << (int)(a - b) << endl;
 
     return 0;
 }
