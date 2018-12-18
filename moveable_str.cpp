@@ -109,6 +109,7 @@ int main()
     mystring str1 = "c++";
     mystring str2(str1); //拷贝构造函数
     mystring str4(std::move(str1)); //转移构造函数(将str1强转成右值引用了)
+    mystring str5(std::forward<mystring>(str2));
     cout << "-------------" << endl;
     mystring str3 = func(); //我理解应该要在转移赋值，但是信息没打印，就是没走转移赋值，还没搞清楚
     cout << "-------------" << endl;
