@@ -29,7 +29,7 @@ public:
     mystring(const mystring& other)
     {
         cout << "mystring(const mystring& other)" << endl;
-        if (!other.data_) {
+        if (other.data_) {
             len_ = other.len_;
             DeleteData();
             CopyData(other.data_);
@@ -70,6 +70,12 @@ public:
         return *this;
     }
 
+    ~mystring()
+    {
+        cout << "~mystring()" << endl;
+        DeleteData();
+    }
+
 private:
     void CopyData(const char* str)
     {
@@ -104,7 +110,9 @@ int main()
     mystring str1 = "c++";
     mystring str2(str1); //拷贝构造函数
     mystring str4(std::move(str1)); //转移构造函数(将str1强转成右值引用了)
+    cout << "-------------" << endl;
     mystring str3 = func();
+    cout << "-------------" << endl;
 
     return 0;
 }
