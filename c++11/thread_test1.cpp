@@ -1,4 +1,5 @@
-//C++11 P167 4.8.4编译不通过
+//C++11 P167
+//g++ thread_test1.cpp -lpthread
 #include <iostream>
 #include <thread>
 #include <functional>
