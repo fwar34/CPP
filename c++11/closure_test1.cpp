@@ -3,18 +3,37 @@
     > Author: Feng
     > Created Time: 2019-07-12 17:25
     > Content: 
- ************************************************************************/
+************************************************************************/
 
 #include <iostream>
 #include <functional>
+#include <thread>
+
+void ThreadFunc(void* user_data) {
+    auto func = (std::function<void()>*)user_data;
+    (*func)();
+    delete func;
+}
+
+void Test(std::function<void()> callback) {
+    auto user_data = new std::function<void()>(callback);
+    std::thread t(ThreadFunc, user_data);
+    t.detach();
+}
 
 int main() {
     int a = 3;
-    std::function<void()> fun1 = [=]() { std::cout << a << std::endl; };
+    Test([=]() {
+             std::this_thread::sleep_for(std::chrono::seconds(1));
+             std::cout << "first " << a << std::endl;
+         });
     a = 4;
-    std::function<void()> fun2 = [=]() { std::cout << a << std::endl; };
-    fun1();
-    fun2();
+    Test([=]() {
+             std::this_thread::sleep_for(std::chrono::seconds(1));
+             std::cout << "second " << a << std::endl;
+         });
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
 
     return 0;
 }
