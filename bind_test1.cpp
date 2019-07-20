@@ -7,48 +7,48 @@ typedef std::tr1::function<void(int)> HandlerEvent;
 
 struct Shape
 {
-	HandlerEvent event;	
+    HandlerEvent event;	
 };
 
 class Rectangle
 {
 private:
-	string m_name;
-	Shape m_shape;
+    string m_name;
+    Shape m_shape;
 public:
-	void init()
-	{
-		m_shape.event = bind(&Rectangle::onEvent, this, tr1::placeholders::_1);
-	}
+    void init()
+        {
+            m_shape.event = bind(&Rectangle::onEvent, this, tr1::placeholders::_1);
+        }
 
-	const Shape getShape() const
-	{
-		return m_shape;
-	}
+    const Shape getShape() const
+        {
+            return m_shape;
+        }
 
-	virtual void onEvent(int arg)
-	{
-		cout << "Rectangle::onEvent arg : " << arg << endl;
-	}
+    virtual void onEvent(int arg)
+        {
+            cout << "Rectangle::onEvent arg : " << arg << endl;
+        }
 };
 
 class Square : public Rectangle
 {
-	void onEvent(int arg)
-	{
-		cout << "Square::onEvent arg : " << arg << endl;
-	}
+    void onEvent(int arg)
+        {
+            cout << "Square::onEvent arg : " << arg << endl;
+        }
 };
 
 int main()
 {
-	Rectangle rect;
-	rect.init();
-	rect.getShape().event(333);
+    Rectangle rect;
+    rect.init();
+    rect.getShape().event(333);
 
-	Square squ;
-	squ.init();
-	squ.getShape().event(444);
+    Square squ;
+    squ.init();
+    squ.getShape().event(444);
 	
-	return 0;
+    return 0;
 }
