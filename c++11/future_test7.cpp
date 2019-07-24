@@ -33,6 +33,10 @@ int main()
     bar = std::async(std::launch::deferred, print, '@', 200);
     // deferred "get" (perform the actual calls):
     foo.get();
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    std::cout << "test....." << std::endl;
+    // std::launch::deferred的启动策略是什么时候调用get，
+    // 什么时候开始执行,比如把下面的bar.get()注释了，就不打印@了
     bar.get();
     std::cout << "\n\n";
 
