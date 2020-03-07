@@ -11,21 +11,22 @@
 #include <list>
 #include <mutex>
 #include <condition_variable>
+#include <chrono>
 
 std::condition_variable cond;
 std::mutex mtx;
 bool stop = false;
 
-std::list<std::function<void()> > fifo;
+std::list<std::function<void()>> fifo;
 
-void process(std::list<std::function<void()> >& fifo)
+void process(std::list<std::function<void()>>& fifo)
 {
     while (!stop) {
         std::unique_lock<std::mutex> lock(mtx);
         while (fifo.empty()) {
             cond.wait(lock);
         }
-        std::list<std::function<void()> > ready_task_list;
+        std::list<std::function<void()>> ready_task_list;
         ready_task_list = fifo;
         fifo.clear();
         lock.unlock();
@@ -35,27 +36,43 @@ void process(std::list<std::function<void()> >& fifo)
             task();
         }
     }
+    std::cout << "thread stop..." << std::endl;
+}
+
+void test()
+{
+    std::cout << "test" << std::endl;
 }
 
 int main()
 {
-
     std::thread t(process, std::ref(fifo));
 
-    // std::function<void()> task = std::bind([](int x) {
-    //                                            std::cout << x << std::endl;
-    //                                        }, 44444);
+    std::function<void()> task = std::bind([](int x) {
+                                               std::cout << x << std::endl;
+                                           }, 44444);
     std::cout << "main task address: " << &task << std::endl;
 
     {
-        std::unique_lock<std::mutex> cond_lock(mtx);
+        std::lock_guard<std::mutex> cond_lock(mtx);
         bool notify = fifo.empty();
-        // fifo.push_back(task);
+        fifo.push_back(task);
         fifo.push_back(std::bind([](int x) {
                                      std::cout << x << std::endl;
-                                 }, 44444));
+                                 }, 5555));
+        fifo.push_back(test);
         if (notify)
             cond.notify_all();
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        stop = true;
+        fifo.push_back([](){});
+        cond.notify_all();
+        std::cout << "send stop" << std::endl;
     }
 
     t.join();
