@@ -3,7 +3,7 @@
     > Author: Feng
     > Created Time: 2019-07-19 15:56
     > Content: function switch thread, 现在编译还有问题，有空了在看
- ************************************************************************/
+************************************************************************/
 
 #include <iostream>
 #include <functional>
@@ -39,17 +39,21 @@ void process(std::list<std::function<void()> >& fifo)
 
 int main()
 {
-    std::thread t(process, fifo);
 
-    std::function<void()> task = std::bind([](int x) {
-                                               std::cout << x << std::endl;
-                                           }, 44444);
+    std::thread t(process, std::ref(fifo));
+
+    // std::function<void()> task = std::bind([](int x) {
+    //                                            std::cout << x << std::endl;
+    //                                        }, 44444);
     std::cout << "main task address: " << &task << std::endl;
 
     {
         std::unique_lock<std::mutex> cond_lock(mtx);
         bool notify = fifo.empty();
-        fifo.push_back(task);
+        // fifo.push_back(task);
+        fifo.push_back(std::bind([](int x) {
+                                     std::cout << x << std::endl;
+                                 }, 44444));
         if (notify)
             cond.notify_all();
     }
