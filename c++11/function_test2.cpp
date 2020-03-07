@@ -2,7 +2,7 @@
     > File Name: function_test1.cpp
     > Author: Feng
     > Created Time: 2019-07-19 15:56
-    > Content: function switch thread, 现在编译还有问题，有空了在看
+    > Content: function switch thread
 ************************************************************************/
 
 #include <iostream>
@@ -56,17 +56,18 @@ int main()
     {
         std::lock_guard<std::mutex> cond_lock(mtx);
         bool notify = fifo.empty();
-        fifo.push_back(task);
+        fifo.push_back(task); //push bind function
         fifo.push_back(std::bind([](int x) {
                                      std::cout << x << std::endl;
-                                 }, 5555));
-        fifo.push_back(test);
-        if (notify)
+                                 }, 5555)); //push bind function
+        fifo.push_back(test); //push c function
+        if (notify) //send condition variable when fifo empty
             cond.notify_all();
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
+    //stop thread
     {
         std::lock_guard<std::mutex> lock(mtx);
         stop = true;
