@@ -12,6 +12,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <chrono>
+#include <sstream>
 
 std::condition_variable cond;
 std::mutex mtx;
@@ -44,13 +45,26 @@ void test()
     std::cout << "test" << std::endl;
 }
 
+struct data {
+    int a = 10;
+    int b = 20;
+};
+
 int main()
 {
     std::thread t(process, std::ref(fifo));
 
-    std::function<void()> task = std::bind([](int x) {
-                                               std::cout << x << std::endl;
-                                           }, 44444);
+    data da;
+    std::cout << "main data address: " << &da << std::endl;
+    std::function<void()> task = std::bind([](data& da) {
+                                               std::ostringstream oss;
+                                               oss << "------------------" << std::endl;
+                                               oss << "thread data address: " << &da << std::endl;
+                                               oss << da.a << std::endl;
+                                               oss << da.b << std::endl;
+                                               oss << "------------------" << std::endl;
+                                               std::cout << oss.str() << std::endl;
+                                           }, da); //bind 函数拷贝data
     std::cout << "main task address: " << &task << std::endl;
 
     {
