@@ -11,6 +11,7 @@
 #include <mutex>
 #include <vector>
 #include <algorithm>
+#include <functional>
 #include <condition_variable>
 
 std::mutex g_mtx;
