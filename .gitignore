@@ -1,5 +1,14 @@
+*.pyc
+*.bak
 .netrwhist
-GTAGS
-GRTAGS
+.DS_Store
+tags
+.tags
+.cscope
+.o
+.class
 GPATH
+GRTAGS
+GTAGS
+log
 a.out
