@@ -14,6 +14,7 @@
 #include <chrono>
 #include <sstream>
 #include <sys/time.h>
+#include <unistd.h>
 
 std::condition_variable cond;
 std::mutex mtx;
@@ -40,11 +41,11 @@ void process_wait_for(std::list<std::function<void()>>& fifo)
     while (!stop) {
         std::cv_status status;
         std::unique_lock<std::mutex> lock(mtx);
-        auto before = std::chrono::steady_clock::now();
+        auto before = std::chrono::high_resolution_clock::now();
         while (fifo.empty()) {
             // bool ret = cond.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::seconds(1),
             //                            [&fifo] () { return !fifo.empty(); });
-            std::cv_status status = cond.wait_until(lock, before + std::chrono::milliseconds(500));
+            status = cond.wait_for(lock, std::chrono::milliseconds(500));
             if (status == std::cv_status::timeout) {
                 break;
             }
@@ -56,11 +57,72 @@ void process_wait_for(std::list<std::function<void()>>& fifo)
         //     fifo.erase(it++);
         // }
 
-        // struct timeval tv;
-        // gettimeofday(&tv, nullptr);
-        // std::cout << "handle input: time: " << tv.tv_sec * 1000 + tv.tv_usec / 1000 << std::endl;
-        auto input_time = std::chrono::system_clock::now();
-        std::cout << "handle input: time: " << std::chrono::system_clock::to_time_t(input_time) << std::endl;
+        if (status != std::cv_status::timeout) {
+            // struct timeval tv;
+            // gettimeofday(&tv, nullptr);
+            // std::cout << "handle input: time: " << tv.tv_sec * 1000 + tv.tv_usec / 1000 << std::endl;
+            auto input_time = std::chrono::system_clock::now();
+            // std::cout << "handle input: time: " << std::chrono::system_clock::to_time_t(input_time) << std::endl;
+            std::cout << "handle input: time: "
+                      << std::chrono::duration_cast<std::chrono::milliseconds>(input_time.time_since_epoch()).count()
+                      << std::endl;
+        }
+
+        std::list<std::function<void()>> ready_task_list;
+        ready_task_list = fifo;
+        fifo.clear();
+        lock.unlock();
+
+        for (auto& task : ready_task_list) {
+            std::cout << "thread task address: " << &task << std::endl;
+            task();
+        }
+
+        // 判断定时器时间是否到达，如果已经到达则触发定时器
+        auto after = std::chrono::high_resolution_clock::now();
+        auto diff = after - before;
+        if (status == std::cv_status::timeout ||
+            diff > std::chrono::high_resolution_clock::duration(std::chrono::milliseconds(500))) {
+            // gettimeofday(&tv, nullptr);
+            // std::cout << "timeout: time: " << tv.tv_sec * 1000 + tv.tv_usec / 1000 << std::endl;
+            auto timeout_time = std::chrono::system_clock::now();
+            // std::cout << "timeout: time: " << std::chrono::system_clock::to_time_t(timeout_time) << std::endl;
+            std::cout << "timeout: time: "
+                      << std::chrono::duration_cast<std::chrono::milliseconds>(timeout_time.time_since_epoch()).count()
+                      << std::endl;
+        }
+    }
+    std::cout << "thread stop..." << std::endl;
+}
+
+void process_wait_until(std::list<std::function<void()>>& fifo)
+{
+    while (!stop) {
+        std::cv_status status;
+        std::unique_lock<std::mutex> lock(mtx);
+        auto before = std::chrono::steady_clock::now();
+        while (fifo.empty()) {
+            // bool ret = cond.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::seconds(1),
+            //                            [&fifo] () { return !fifo.empty(); });
+            status = cond.wait_until(lock, before + std::chrono::milliseconds(500));
+            if (status == std::cv_status::timeout) {
+                break;
+            }
+        }
+
+        if (status != std::cv_status::timeout) {
+            // for (auto it = fifo.begin(); it != fifo.end(); ) {
+            //     auto& task = *it;
+            //     task();
+            //     fifo.erase(it++);
+            // }
+
+            // struct timeval tv;
+            // gettimeofday(&tv, nullptr);
+            // std::cout << "handle input: time: " << tv.tv_sec * 1000 + tv.tv_usec / 1000 << std::endl;
+            auto input_time = std::chrono::system_clock::now();
+            std::cout << "handle input: time: " << std::chrono::system_clock::to_time_t(input_time) << std::endl;
+        }
 
         std::list<std::function<void()>> ready_task_list;
         ready_task_list = fifo;
@@ -137,17 +199,17 @@ int main()
                                            }, da); //bind 函数拷贝data
     std::cout << "main task address: " << &task << std::endl;
 
-    // for (int i = 0; i < 300; ++i)
-    while (true)
+    for (int i = 0; i < 30; ++i)
+    // while (true)
     {
         {
             std::lock_guard<std::mutex> cond_lock(mtx);
             // bool notify = fifo.empty();
             fifo.push_back(task); //push bind function
-            fifo.push_back(std::bind([](int x) {
-                                         // std::cout << x << std::endl;
-                                     }, 5555)); //push bind function
-            fifo.push_back(test); //push c function
+            // fifo.push_back(std::bind([](int x) {
+            //                              // std::cout << x << std::endl;
+            //                          }, 5555)); //push bind function
+            // fifo.push_back(test); //push c function
             // if (notify) { //send condition variable when fifo empty
             //     cond.notify_all();
             // } 
@@ -155,7 +217,23 @@ int main()
             // 这里不用判空来notify，如果内部没有wait好像不会进入系统api
             cond.notify_all();
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+        // auto t1 = std::chrono::system_clock::now();
+        // usleep(1000000);
+        // auto t2 = std::chrono::system_clock::now();
+        // auto diff = t2 - t1;
+        // std::cout << "test: " << diff.count() << std::end;
+
+        auto t1 = std::chrono::system_clock::now();
+        std::cout << "test: t1 time: "
+                  << std::chrono::duration_cast<std::chrono::seconds>(t1.time_since_epoch()).count()
+                  << std::endl;
+        // std::this_thread::sleep_for(std::chrono::seconds(1));
+        usleep(1000000);
+        auto t2 = std::chrono::system_clock::now();
+        std::cout << "test: t2 time: "
+                  << std::chrono::duration_cast<std::chrono::seconds>(t2.time_since_epoch()).count()
+                  << std::endl;
     }
 
     t.join();
