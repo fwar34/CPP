@@ -40,12 +40,12 @@ wait_until(unique_lock<mutex>& __lock,
 void process_wait_for(std::list<std::function<void()>>& fifo)
 {
     using clock = std::chrono::steady_clock;
+    // std::chrono::time_point<clock> last_timeout = clock::now();
     auto last_timeout = clock::now();
     
     while (!stop) {
         std::cv_status status;
         std::unique_lock<std::mutex> lock(mtx);
-        auto t1 = clock::now();
         while (fifo.empty()) {
             status = cond.wait_for(lock, std::chrono::milliseconds(400));
             if (status == std::cv_status::timeout) {
@@ -77,12 +77,11 @@ void process_wait_for(std::list<std::function<void()>>& fifo)
         }
 
         // 判断定时器时间是否到达，如果已经到达则触发定时器
-        auto t2 = clock::now();
-        auto diff = t2 - last_timeout;
+        auto now = clock::now();
         if (status == std::cv_status::timeout ||
             // diff > clock::duration(std::chrono::milliseconds(400))) {
-            diff > std::chrono::milliseconds(400)) {
-            last_timeout = t2;
+            now - last_timeout > std::chrono::milliseconds(400)) {
+            last_timeout = now;
 
             auto timeout_time = std::chrono::system_clock::now();
             std::cout << "timeout: time: "
