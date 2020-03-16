@@ -46,11 +46,8 @@ void process_wait_for(std::list<std::function<void()>>& fifo)
     while (!stop) {
         std::cv_status status;
         std::unique_lock<std::mutex> lock(mtx);
-        while (fifo.empty()) {
+        if (fifo.empty()) {
             status = cond.wait_for(lock, std::chrono::milliseconds(400));
-            if (status == std::cv_status::timeout) {
-                break;
-            }
         }
 
         // for (auto it = fifo.begin(); it != fifo.end(); ) {
@@ -102,14 +99,11 @@ void process_wait_until(std::list<std::function<void()>>& fifo)
         std::cv_status status;
         std::unique_lock<std::mutex> lock(mtx);
         auto t1 = clock::now();
-        while (fifo.empty()) {
+        if (fifo.empty()) {
             // bool ret = cond.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::seconds(1),
             //                            [&fifo] () { return !fifo.empty(); });
             // ret为false则代表超时或者已经过了超时时间返回pred(),用这个分支则不用while去判断fifo.empty()
             status = cond.wait_until(lock, t1 + std::chrono::milliseconds(100));
-            if (status == std::cv_status::timeout) {
-                break;
-            }
         }
 
         if (status != std::cv_status::timeout) {
