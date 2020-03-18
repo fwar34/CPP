@@ -23,7 +23,7 @@ bool stop = false;
 
 std::list<std::function<void()>> fifo;
 
-#if 0
+#if 0 // c++11中wait中有谓语判断的函数内部实际上都已经做过while循环来防止虚假唤醒
 template<typename _Clock, typename _Duration, typename _Predicate>
 bool
 wait_until(unique_lock<mutex>& __lock,
