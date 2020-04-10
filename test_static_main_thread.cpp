@@ -3,7 +3,8 @@
 #include <thread>
 using namespace std;
 
-// 1. OS将静态对象（TangMQ）在main函数之后释放（执行析构），在析构执行完成的同时结束其他线程（UpdateThreadFunc）
+// 1. OS将静态对象（TangMQ）在main函数之后释放（执行析构），在析构执行完成的同时结束其他线程（UpdateThreadFunc），
+//    可以将TangMQ的析构中sleep时间改成2就能确定这点
 // 2. OS对静态对象（CdtsModule）在main函数之后不执行析构，因为是new出来的，不执行delete的话不会析构，
 //    而TangMQ不是new出来的，所以会执行析构
 
