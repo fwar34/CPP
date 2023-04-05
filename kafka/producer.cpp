@@ -1,7 +1,8 @@
 #include <iostream>
 #include <string>
+#include <signal.h>
 
-#include <rdkafkacpp.h>
+#include <librdkafka/rdkafkacpp.h>
 
 static volatile sig_atomic_t run = 1;
 
@@ -23,7 +24,7 @@ public:
                       << message.offset() << std::endl;
         }
     }
-}
+};
 
 int main(int argc, char** argv)
 {
