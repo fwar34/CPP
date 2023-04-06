@@ -20,7 +20,9 @@ int main()
     b.push_back(1);
     b.push_back(2);
     b.push_back(3);
+    vector<int> test = vector<int>();
+    cout << test.size() << endl;
 
-    cout << a == b << endl;
+    cout << (a == b) << endl;
     return 0;
 }
