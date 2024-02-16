@@ -33,6 +33,18 @@ public:
         return ret;
     }
 
+    // template<class F, class... Args>
+    // auto PushTask2(F&& f, Args&&... args) -> std::future<decltype(std::forward<F>(f)(std::forward<Args>(args)...))>
+    // {
+    //     using RetType = decltype(std::forward<F>(f)(std::forward<Args>(args)...));
+    //     std::packaged_task<RetType()> task(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+    //     std::future<RetType> ret = task.get_future();
+    //     if (!tasks_.Push([&task] { task(); })) {
+    //         return std::future<RetType>{};
+    //     }
+    //     return ret;
+    // }
+
     void Stop()
     {
         std::call_once(stopFlag_, [this] { StopThreads(); });

@@ -11,17 +11,21 @@ class SyncQueue2
 {
 public:
     SyncQueue2(uint32_t maxSize) : stop_(false), maxSize_(maxSize) {}
-    bool Push(T&& t)
+
+    template<class Args>
+    bool Push(Args&& args)
+    // bool Push(T&& t)
     {
         std::cout << "T&& t" << std::endl;
-        return Add(std::forward<T>(t));
+        // return Add(std::forward<T>(t));
+        return Add(std::forward<Args>(args));
     }
 
-    bool Push(const T& t)
-    {
-        std::cout << "const T& t" << std::endl;
-        return Add(t);
-    }
+    // bool Push(const T& t)
+    // {
+    //     std::cout << "const T& t" << std::endl;
+    //     return Add(t);
+    // }
 
     bool Pop(T& t)
     {
@@ -85,6 +89,7 @@ public:
 private:
     template<class Args>
     bool Add(Args&& args)
+    // bool Add(T&& t)
     {
         std::unique_lock<std::mutex> lock(mutex_);
         notFull_.wait(lock, [this] { return list_.size() != maxSize_ || stop_; });
@@ -92,6 +97,7 @@ private:
             return false;
         }
         list_.emplace_back(std::forward<Args>(args));
+        // list_.emplace_back(std::forward<T>(t));
         if (list_.size() == 1) {
             notEmpty_.notify_one();
         }

@@ -31,10 +31,22 @@ public:
         std::call_once(stopFlag_, [this] { StopThreads(); });
     }
 
+    void PushTask(Task&& task)
+    {
+        // tasks_.Push(task);
+        tasks_.Push(std::forward<Task>(task));
+    }
+
     void PushTask(const Task& task)
     {
         tasks_.Push(task);
     }
+
+    // template<class T>
+    // void PushTask(T&& t)
+    // {
+    //     tasks_.Push(std::forward<T>(t));
+    // }
 
 private:
     void Start()
