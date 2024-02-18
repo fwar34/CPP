@@ -3,6 +3,8 @@
         "ostream": "cpp",
         "mutex": "cpp",
         "future": "cpp",
-        "atomic": "cpp"
+        "atomic": "cpp",
+        "functional": "cpp",
+        "*.tcc": "cpp"
     }
 }
