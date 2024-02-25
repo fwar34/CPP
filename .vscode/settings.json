@@ -5,6 +5,10 @@
         "future": "cpp",
         "atomic": "cpp",
         "functional": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "tuple": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "string_view": "cpp"
     }
 }
