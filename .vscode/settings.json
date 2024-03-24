@@ -9,6 +9,8 @@
         "tuple": "cpp",
         "string": "cpp",
         "unordered_map": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "condition_variable": "cpp",
+        "iomanip": "cpp"
     }
 }

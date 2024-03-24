@@ -26,6 +26,8 @@ public:
     {
         Stop();
     }
+    ThreadPool(const ThreadPool& other) = delete;
+    ThreadPool& operator=(const ThreadPool& other) = delete;
 
     static ThreadPool& Instance()
     {
@@ -54,9 +56,6 @@ public:
     }
 
 private:
-    ThreadPool(const ThreadPool& other) = delete;
-    ThreadPool& operator=(const ThreadPool& other) = delete;
-
     void Start()
     {
         for (uint32_t i = 0; i < freeThreadNum_; ++i) {
