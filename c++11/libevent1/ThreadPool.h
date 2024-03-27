@@ -1,3 +1,5 @@
+#pragma once
+#include "Singleton.h"
 #include <iostream>
 #include <thread>
 #include <atomic>
@@ -10,34 +12,13 @@
 #include <functional>
 #include <future>
 
-class ThreadPool
+class ThreadPool : public Singleton<ThreadPool>
 {
-    using Task = std::packaged_task<void()>;
-    std::queue<Task> tasks_;
-    std::mutex mutex_;
-    std::condition_variable cv_;
-    std::atomic<bool> stop_;
-    std::vector<std::thread> threads_;
-    uint32_t threadNum_;
-
+    friend class Singleton<ThreadPool>;
 public:
-    explicit ThreadPool(int threadNum = std::thread::hardware_concurrency()) : stop_(false), threadNum_(threadNum)
-    {
-        if (threadNum < 2) {
-            threadNum_ = 2;
-        }
-    }
-    ~ThreadPool()
-    {
-    }
+    ~ThreadPool() = default;
     ThreadPool(const ThreadPool&) = delete;
     ThreadPool& operator=(const ThreadPool&) = delete;
-
-    static ThreadPool& GetInstance()
-    {
-        static ThreadPool instance;
-        return instance;
-    }
 
     template<typename F, typename... Args>
     auto Commit(F&& f, Args&&... args) -> std::future<decltype(std::forward<F>(f)(std::forward<Args>(args)...))>
@@ -88,4 +69,19 @@ public:
             t.join();
         }
     }
+
+private:
+    explicit ThreadPool(int threadNum = std::thread::hardware_concurrency()) : stop_(false), threadNum_(threadNum)
+    {
+        if (threadNum < 2) {
+            threadNum_ = 2;
+        }
+    }
+    using Task = std::packaged_task<void()>;
+    std::queue<Task> tasks_;
+    std::mutex mutex_;
+    std::condition_variable cv_;
+    std::atomic<bool> stop_;
+    std::vector<std::thread> threads_;
+    uint32_t threadNum_;
 };

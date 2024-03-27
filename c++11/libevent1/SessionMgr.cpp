@@ -10,6 +10,7 @@ bool SessionMgr::AddSession(std::shared_ptr<Session> session)
         return false;
     }
     sessions_.insert(std::make_pair(session->Id(), std::move(session)));
+    return true;
 }
 
 void SessionMgr::RemoveSession(const std::string& id)
