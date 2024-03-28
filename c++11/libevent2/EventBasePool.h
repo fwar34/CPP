@@ -3,22 +3,22 @@
 #include <vector>
 #include <event2/event.h>
 
-class BaseEventPool
+class EventBasePool
 {
 public:
-    ~BaseEventPool() = default;
-    static BaseEventPool& GetInstance()
+    ~EventBasePool() = default;
+    static EventBasePool& GetInstance()
     {
-        static BaseEventPool instance;
+        static EventBasePool instance;
         return instance;
     }
 
-    struct event_base* GetBaseEvent();
+    struct event_base* GetEventBase();
     bool Start();
     void Stop();
 
 private:
-    BaseEventPool(size_t threadNum = std::thread::hardware_concurrency()) : threadNum_(threadNum)
+    EventBasePool(size_t threadNum = std::thread::hardware_concurrency()) : threadNum_(threadNum)
     {
     }
     std::vector<struct event_base*> evbases_;
