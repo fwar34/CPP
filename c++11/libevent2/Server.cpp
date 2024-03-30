@@ -1,10 +1,9 @@
 #include "Server.h"
 #include "EventBasePool.h"
 
-bool Server::Start()
+int Server::Start()
 {
-    EventBasePool::GetInstance().Start();
-    return true;
+    return EventBasePool::GetInstance().Start();
 }
 
 void Server::Stop()

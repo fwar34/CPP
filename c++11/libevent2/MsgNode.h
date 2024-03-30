@@ -1,4 +1,5 @@
 #pragma once
+#include <cstring>
 
 class MsgNode
 {
@@ -20,6 +21,17 @@ public:
         memset(data_, 0, sizeof(data_));
         curPos_ = 0;
     }
+
+    size_t CurPos()
+    {
+        return curPos_;
+    }
+
+    size_t MaxLen()
+    {
+        return maxLen_;
+    }
+
 protected:
     char* data_;
     size_t curPos_;

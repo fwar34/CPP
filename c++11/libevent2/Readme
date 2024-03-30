@@ -1,1 +1,1 @@
-#### 多线程 event_base（多线程 reactor 模型），收到数据发送到逻辑线程池
+#### 多线程 event_base（多线程 reactor 模型），多个 io 线程收到数据发送到逻辑线程池

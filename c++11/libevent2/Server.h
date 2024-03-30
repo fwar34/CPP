@@ -2,6 +2,7 @@
 #include "Session.h"
 #include <string>
 #include <map>
+#include <cstdint>
 
 class Server
 {
@@ -9,12 +10,12 @@ public:
     ~Server()
     {
     }
-    static Server& GetInstnce()
+    static Server& GetInstance()
     {
         static Server instance;
         return instance;
     }
-    bool Start();
+    int Start();
     void Stop();
 
 private:
