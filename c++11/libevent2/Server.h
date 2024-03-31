@@ -4,6 +4,9 @@
 #include <map>
 #include <cstdint>
 
+namespace Nt
+{
+
 class Server
 {
 public:
@@ -21,3 +24,5 @@ public:
 private:
     Server() {}
 };
+
+}

@@ -10,10 +10,14 @@
 #include <iostream>
 
 struct bufferevent;
+namespace Nt
+{
+
 class Session : public IOHandler, public Object
 {
 public:
-    Session(bufferevent* bev, const Address& address) : address_(address), recvNode_(UINT16_MAX), bev_(bev)
+    Session(struct bufferevent* bev, const Address& address, IOThread* thd) : 
+        Object(thd), address_(address), recvNode_(UINT16_MAX), bev_(bev)
     {
     }
     ~Session()
@@ -26,9 +30,9 @@ public:
         return address_;
     }
 
-    void HandleInput(bufferevent* bev) override;
+    void HandleInput(struct bufferevent* bev) override;
     void HandleOutput() override;
-    void HandleClose(bufferevent* bev) override;
+    void HandleClose(struct bufferevent* bev) override;
     void HandleTimeout() override;
     int Start() override;
     int Accept() override;
@@ -39,5 +43,7 @@ private:
     Address address_;
     RecvMsgNode recvNode_;
     std::list<SendMsgNode> sendNodes_;
-    bufferevent* bev_;
+    struct bufferevent* bev_;
 };
+
+}

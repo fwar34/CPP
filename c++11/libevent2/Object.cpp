@@ -1,6 +1,10 @@
 #include "Object.h"
 #include "Signal.h"
+#include <iostream>
 
+namespace Nt
+{
+    
 void Object::SendSignal(const Signal& s)
 {
     AddRef();
@@ -10,16 +14,19 @@ void Object::SendSignal(const Signal& s)
 void Object::SendStart()
 {
     AddRef();
-    NewNt::Signal signal = { NewNt::Signal::SIGNAL_START, this };
+    Signal signal = { Signal::SIGNAL_START, this };
     thread_->SendSignal(signal);
 }
-void Object::SendStop();
+void Object::SendStop()
 {
     AddRef();
-    NewNt::Signal signal = { NewNt::Signal::SIGNAL_STOP, this };
-    thread_->SendSignal(signal);
+    Signal signal = { Signal::SIGNAL_STOP, this };
+    thread_->SeSignalId(signal);
 }
 
-void Object::ProcessSignal()
+void Object::ProcessSignal(Signal::SignalId id)
 {
+    std::cout << "object: " << this << " receive signal: " << id << std::endl;
 }
+
+};

@@ -1,21 +1,39 @@
 #pragma once
+#include "Dispatch.h"
 #include "Signal.h"
-#include <vector>
+#include "Object.h"
+#include <thread>
+#include <event2/event.h>
 
-namespace NewNt
+namespace Nt
 {
-class Dispatch;
 class Signal;
-class IOThread
+class IOThread : public Object
 {
 public:
-    IOThread(Dispatch* dispatch) : dispatch_(dispatch)
+    IOThread(Dispatch* dispatch) : Object(this), dispatch_(dispatch)
     {
     }
-    void SendSignal(const Signal& s);
-private:
-    Dispatch* dispatch_; // reactor
-    SignalBox signalBox_;
+    ~IOThread()
+    {
+        if (signalEvent_) {
+            event_free(signalEvent_);
+        }
 
+        if (dispatch_) {
+            delete dispatch_;
+        }
+    }
+    void SendSignal(const Signal& s);
+    void Start();
+    void Stop();
+
+private:
+    void RegisterSignalEvent();
+
+    Dispatch* dispatch_; // reactor
+    std::thread thread_;
+    SignalBox signalBox_;
+    struct event* signalEvent_;  // Signal 的 event
 };
 };

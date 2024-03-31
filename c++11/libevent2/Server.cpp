@@ -1,12 +1,17 @@
 #include "Server.h"
-#include "EventBasePool.h"
+#include "IOServicePool.h"
+
+namespace Nt
+{
 
 int Server::Start()
 {
-    return EventBasePool::GetInstance().Start();
+    return IOServicePool::GetInstance().Start();
 }
 
 void Server::Stop()
 {
+    IOServicePool::GetInstance().Stop();
+}
 
 }

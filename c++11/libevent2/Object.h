@@ -1,7 +1,10 @@
 #pragma once
+#include "Signal.h"
 #include <atomic>
 
-class IOThread;
+namespace Nt
+{
+
 class RefCount
 {
 public:
@@ -31,11 +34,11 @@ private:
     std::atomic_uint32_t refCount_;
 };
 
-class Signal;
+class IOThread;
 class Object : public RefCount
 {
 public:
-    Object(IOthread* thd) : thread_(thd)
+    Object(IOThread* thd) : thread_(thd)
     {
     }
     virtual ~Object() = default;
@@ -43,11 +46,11 @@ public:
     void SendStart();
     void SendStop();
 
-protected():
-    virtual void ProcessSignal()top();
-    {
-    }
+protected:
+    virtual void ProcessSignal(Signal::SignalId id);
 
 private:
     IOThread* thread_;
+};
+
 };

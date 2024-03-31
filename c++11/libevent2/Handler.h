@@ -1,6 +1,9 @@
 #pragma once
 
 struct bufferevent;
+namespace Nt
+{
+
 class EventHandler
 {
 public:
@@ -18,4 +21,6 @@ public:
     virtual int Start() = 0;
     virtual int Connect() { return 0; }
     virtual int Close() = 0;
+};
+
 };

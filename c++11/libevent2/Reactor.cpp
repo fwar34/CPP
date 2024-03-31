@@ -46,10 +46,26 @@ static void AcceptCb(struct evconnlistener* evlistener, evutil_socket_t sock, st
 
 static void ReadSockPairCb(struct bufferevent *bev, void *ctx)
 {
-    Session* session = reinterpret_cast<Session*>(ctx);
+    std::cout << "io thread: " << std::this_thread::get_id() << " break" << std::endl;
+    event_base_loopbreak(bufferevent_get_base(bev));
 }
 
-void Reactor::Dispatch()
+Reactor::~Reactor()
+{
+    if (evlistener_) {
+        evconnlistener_free(evlistener_);
+    }
+
+    if (evSockPairEvent_) {
+        bufferevent_free(evSockPairEvent_);
+    }
+
+    if (evBase_) {
+        event_base_free(evbase_);
+    }
+}
+
+void Reactor::Start()
 {
     evbase_ = event_base_new();
     struct sockaddr_in addr = {0};
@@ -60,18 +76,18 @@ void Reactor::Dispatch()
     // 然后，当新的连接请求到达时，内核会负责将这些连接分发到不同的套接字上，
     // 从而实现负载均衡和并行处理。
     // 这里多个线程同时监听 listen fd
-    struct evconnlistener *evlistener = evconnlistener_new_bind(
+    evlistener_ = evconnlistener_new_bind(
         evbase_, AcceptCb, evbase_,
         LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE_PORT,
         -1, (struct sockaddr *)&addr, sizeof(addr));
 
-    struct bufferevent* evSockPairEvent = bufferevent_socket_new(evbase_, sockPair_[0], BEV_OPT_CLOSE_ON_FREE);
-    bufferevent_setcb(evSockPairEvent, ReadSockPairCb, nullptr, nullptr, nullptr);
-    bufferevent_enable(evSockPairEvent, EV_READ);
+    struct bufferevent* evSockPairEvent_ = bufferevent_socket_new(evbase_, sockPair_[0], BEV_OPT_CLOSE_ON_FREE);
+    bufferevent_setcb(evSockPairEvent_, ReadSockPairCb, nullptr, nullptr, nullptr);
+    bufferevent_enable(evSockPairEvent_, EV_READ);
+}
 
+void Reactor::DispatchEvents()
+{
     event_base_dispatch(evbase_);
-    evconnlistener_free(evlistener);
-    bufferevent_free(evSockPairEvent);
-    event_base_free(evbase_);
     std::cout << "io thread: " << std::this_thread::get_id() << " exit!!!" << std::endl;
 }

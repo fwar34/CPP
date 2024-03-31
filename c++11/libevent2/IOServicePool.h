@@ -1,4 +1,5 @@
 #pragma once
+#include "IOThread.h"
 #include <thread>
 #include <mutex>
 #include <vector>
@@ -8,11 +9,10 @@
 #include <event2/listener.h>
 #include <event2/event.h>
 
-namespace NewNt
+namespace Nt
 {
 constexpr size_t threadNum = 4;
 
-class Dispatch;
 class IOServicePool
 {
 public:
@@ -22,17 +22,18 @@ public:
         return instance;
     }
 
-    struct event_base* GetEventBase();
+    // struct event_base* GetEventBase();
     int Start();
     void Stop();
 
 private:
-    IOServicePool(size_t threadNum = std::thread::hardware_concurrency()) : threadNum_(threadNum)
+    IOServicePool(size_t threadNum = std::thread::hardware_concurrency()) : 
+        threadNum_(threadNum)
     {
     }
     ~IOServicePool() = default;
-    IOServicePool(const EventBasePool&) = delete;
-    IOServicePool& operator=(const EventBasePool&) = delete;
+    IOServicePool(const IOServicePool&) = delete;
+    IOServicePool& operator=(const IOServicePool&) = delete;
 
     std::vector<IOThread> ioThreads_;
     size_t threadNum_;

@@ -4,7 +4,10 @@
 #include <event2/listener.h>
 #include <event2/event.h>
 
-void Session::HandleInput(bufferevent *bev)
+namespace Nt
+{
+
+void Session::HandleInput(struct bufferevent *bev)
 {
     struct evbuffer* input = bufferevent_get_input(bev);
     size_t inputLength = evbuffer_get_length(input);
@@ -13,7 +16,7 @@ void Session::HandleOutput()
 {
 
 }
-void Session::HandleClose(bufferevent *bev)
+void Session::HandleClose(struct bufferevent *bev)
 {
 
 }
@@ -38,4 +41,6 @@ int Session::Connect()
 {
 
     return 0;
+}
+
 }
