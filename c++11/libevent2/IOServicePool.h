@@ -35,7 +35,7 @@ private:
     IOServicePool(const IOServicePool&) = delete;
     IOServicePool& operator=(const IOServicePool&) = delete;
 
-    std::vector<IOThread> ioThreads_;
+    std::vector<IOThread*> ioThreads_;
     size_t threadNum_;
 };
 };

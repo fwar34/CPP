@@ -13,8 +13,17 @@ namespace Nt
 int IOServicePool::Start()
 {
     for (size_t i = 0; i < threadNum_; ++i) {
-        // ioThreads_.emplace_back(new Reactor());
-        // ioThreads_[i].Start();
+        Reactor* reactor = new Reactor;
+        IOThread* thd = new IOThread(reactor);
+        reactor->SetThread(thd);
+        ioThreads_.push_back(thd);
+        thd->Start();
+    }
+
+    std::cout << "main thread: " << std::this_thread::get_id() << " wait io thread exit!!!" << std::endl;
+
+    for (auto t : ioThreads_) {
+        t->Join();
     }
 
     return 0;
@@ -22,8 +31,8 @@ int IOServicePool::Start()
 
 void IOServicePool::Stop()
 {
-    for (auto& t : ioThreads_) {
-        t.Stop();
+    for (auto t : ioThreads_) {
+        t->Stop();
     }
 }
 

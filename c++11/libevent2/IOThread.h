@@ -7,6 +7,7 @@
 
 namespace Nt
 {
+
 class Signal;
 class IOThread : public Object
 {
@@ -24,9 +25,11 @@ public:
             delete dispatch_;
         }
     }
+    
     void SendSignal(const Signal& s);
     void Start();
     void Stop();
+    void Join();
 
 private:
     void RegisterSignalEvent();
@@ -36,4 +39,5 @@ private:
     SignalBox signalBox_;
     struct event* signalEvent_;  // Signal 的 event
 };
-};
+
+}

@@ -1,6 +1,9 @@
 #include "CommonDefine.h"
 #include <sstream>
 
+namespace Nt
+{
+    
 std::string Address::Dump() const
 {
     std::stringstream ss;
@@ -29,3 +32,5 @@ bool operator<(const Address& left, const Address& right)
         return left.port_ < right.port_;
     }
 }
+
+} // namespace Nt

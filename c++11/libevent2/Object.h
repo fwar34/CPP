@@ -5,6 +5,7 @@
 namespace Nt
 {
 
+class IOThread;
 class RefCount
 {
 public:
@@ -42,15 +43,13 @@ public:
     {
     }
     virtual ~Object() = default;
+    virtual void ProcessSignal(Signal::SignalId id);
     void SendSignal(const Signal& s);
     void SendStart();
     void SendStop();
-
-protected:
-    virtual void ProcessSignal(Signal::SignalId id);
 
 private:
     IOThread* thread_;
 };
 
-};
+}

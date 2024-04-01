@@ -18,13 +18,21 @@ public:
         SIGNAL_START = 0,
         SIGNAL_STOP,
     };
-    Signal(uint32_t signalId, Object* receiver) : 
-        signalId_(signalId), receiver_(receiver)
+    Signal(SignalId signalId, Object* receiver) : 
+        id_(signalId), receiver_(receiver)
     {
+    }
+    Object* Receiver()
+    {
+        return receiver_;
+    }
+    SignalId Id()
+    {
+        return id_;
     }
 
 private:
-    uint32_t signalId_;
+    SignalId id_;
     Object* receiver_;
 };
 

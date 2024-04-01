@@ -2,6 +2,9 @@
 #include "Session.h"
 #include <iostream>
 
+namespace Nt
+{
+    
 SessionMgr::SessionMgr()
 {
 
@@ -18,3 +21,5 @@ void SessionMgr::AddSession(Session* session)
     sessions_[session->GetAddress()] = session;
     session->AddRef();
 }
+
+};

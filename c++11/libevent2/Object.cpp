@@ -1,4 +1,5 @@
 #include "Object.h"
+#include "IOThread.h"
 #include "Signal.h"
 #include <iostream>
 
@@ -21,7 +22,7 @@ void Object::SendStop()
 {
     AddRef();
     Signal signal = { Signal::SIGNAL_STOP, this };
-    thread_->SeSignalId(signal);
+    thread_->SendSignal(signal);
 }
 
 void Object::ProcessSignal(Signal::SignalId id)
@@ -29,4 +30,4 @@ void Object::ProcessSignal(Signal::SignalId id)
     std::cout << "object: " << this << " receive signal: " << id << std::endl;
 }
 
-};
+}

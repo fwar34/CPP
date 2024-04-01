@@ -1,3 +1,4 @@
+#include "Object.h"
 #include "Signal.h"
 #include <list>
 #include <event2/event.h>
@@ -16,7 +17,7 @@ void SignalBox::ProcessSignals()
     }
 
     for (auto& s : signals) {
-        s.receiver_->ProcessSignal(s.signalId_);
+        s.Receiver()->ProcessSignal(s.Id());
     }
 }
 

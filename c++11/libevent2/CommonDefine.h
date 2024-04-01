@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
 
+namespace Nt
+{
+
 struct Address
 {
     std::string ip_;
@@ -10,3 +13,5 @@ struct Address
 };
 
 bool operator<(const Address& left, const Address& right);
+
+}

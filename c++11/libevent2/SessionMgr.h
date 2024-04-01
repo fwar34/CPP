@@ -1,9 +1,12 @@
 #pragma once
+#include "CommonDefine.h"
 #include <map>
 #include <memory>
 #include <mutex>
 
-class Address;
+namespace Nt
+{
+
 class Session;
 class SessionMgr
 {
@@ -25,4 +28,6 @@ public:
 private:
     std::mutex mutex_;
     std::map<Address, Session*> sessions_;
+};
+
 };
