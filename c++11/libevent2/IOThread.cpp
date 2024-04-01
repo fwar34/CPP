@@ -1,5 +1,6 @@
 #include "IOThread.h"
 #include "Reactor.h"
+#include "ErrorCode.h"
 
 namespace Nt
 {
@@ -12,7 +13,10 @@ void IOThread::SendSignal(const Signal& s)
 void IOThread::Start()
 {
     thread_ = std::thread([this]() {
-        dispatch_->Start();
+        if (dispatch_->Start() != NtErrorCode::NtErrorSucess) {
+            std::cout << "iothread: " << std::this_thread::get_id() << "error, exit!" << std::endl;
+            return;
+        }
         RegisterSignalEvent();
         dispatch_->DispatchEvents();
     });

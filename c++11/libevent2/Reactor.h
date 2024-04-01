@@ -25,7 +25,7 @@ public:
     {
         thread_ = thread;
     }
-    void Start() override;
+    int Start() override;
     void DispatchEvents() override;
     struct event_base* EventBase()
     {

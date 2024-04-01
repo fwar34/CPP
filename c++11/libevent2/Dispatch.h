@@ -12,7 +12,7 @@ public:
         evutil_socketpair(AF_UNIX, SOCK_STREAM, 0, sockPair_);
     }
     virtual ~Dispatch() = default;
-    virtual void Start() = 0;
+    virtual int Start() = 0;
     virtual void DispatchEvents() = 0;
     virtual bool Stop()
     {

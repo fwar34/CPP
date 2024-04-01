@@ -1,6 +1,7 @@
 #include "Reactor.h"
 #include "Session.h"
 #include "SessionMgr.h"
+#include "ErrorCode.h"
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 #include <event2/listener.h>
@@ -72,7 +73,7 @@ Reactor::~Reactor()
     }
 }
 
-void Reactor::Start()
+int Reactor::Start()
 {
     evbase_ = event_base_new();
     struct sockaddr_in addr = {0};
@@ -87,10 +88,16 @@ void Reactor::Start()
         evbase_, AcceptCb, this,
         LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE_PORT,
         -1, (struct sockaddr *)&addr, sizeof(addr));
+    if (!evlistener_) {
+        std::cout << "iothread: " << std::this_thread::get_id() << " create listener failed!" << std::endl;
+        return NtErrorCode::NtErrorCreateListenFailed;
+    }
 
     struct bufferevent* evSockPairEvent_ = bufferevent_socket_new(evbase_, sockPair_[0], BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(evSockPairEvent_, ReadSockPairCb, nullptr, nullptr, this);
     bufferevent_enable(evSockPairEvent_, EV_READ);
+
+    return 0;
 }
 
 void Reactor::DispatchEvents()

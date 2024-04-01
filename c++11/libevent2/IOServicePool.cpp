@@ -1,5 +1,6 @@
 #include "IOServicePool.h"
 #include "Reactor.h"
+#include "ErrorCode.h"
 #include "CommonDefine.h"
 #include "Session.h"
 #include "SessionMgr.h"
