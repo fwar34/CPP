@@ -78,7 +78,8 @@ int Reactor::Start()
     evbase_ = event_base_new();
     struct sockaddr_in addr = {0};
     addr.sin_family = AF_INET;
-    addr.sin_port = PORT;
+    // 这里注意必须使用 htons 转换端口号
+    addr.sin_port = htons(PORT);
     // 当多个进程或线程需要监听同一个端口时，REUSEPORT 选项非常有用。
     // 每个进程或线程可以创建自己的套接字，并将它们绑定到同一个端口上。
     // 然后，当新的连接请求到达时，内核会负责将这些连接分发到不同的套接字上，
@@ -92,6 +93,8 @@ int Reactor::Start()
         std::cout << "iothread: " << std::this_thread::get_id() << " create listener failed!" << std::endl;
         return NtErrorCode::NtErrorCreateListenFailed;
     }
+    std::cout << "iothread tid: " << std::this_thread::get_id() << " listener fd: " 
+        << evconnlistener_get_fd(evlistener_) << std::endl;
 
     struct bufferevent* evSockPairEvent_ = bufferevent_socket_new(evbase_, sockPair_[0], BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(evSockPairEvent_, ReadSockPairCb, nullptr, nullptr, this);

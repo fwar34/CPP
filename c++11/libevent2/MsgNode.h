@@ -1,10 +1,11 @@
 #pragma once
 #include <cstring>
 
+// ring buffer，不支持扩容，后续可以添加扩容逻辑
 class MsgNode
 {
 public:
-    MsgNode(size_t maxLen) : curPos_(0), maxLen_(maxLen)
+    MsgNode(size_t maxLen) : readPos_(0), writePos_(0), curLen_(0), maxLen_(maxLen)
     {
         data_ = new char[maxLen];
     }
@@ -19,12 +20,81 @@ public:
     void Clear()
     {
         memset(data_, 0, sizeof(data_));
-        curPos_ = 0;
+        readPos_ = 0;
+        writePos_ = 0;
     }
 
-    size_t CurPos()
+    size_t ReadPos()
     {
-        return curPos_;
+        return readPos_;
+    }
+
+    size_t WritePos()
+    {
+        return writePos_;
+    }
+
+    bool IsFull()
+    {
+        return curLen_ == maxLen_;
+    }
+
+    bool IsEmpty()
+    {
+        return curLen_ == 0;
+    }
+
+    size_t Write(const char* data, size_t dataLen)
+    {
+        if (IsFull()) {
+            return 0;
+        }
+
+        size_t freeLen = maxLen_ - curLen_;
+        if (freeLen < dataLen) {
+            return 0;
+        }
+
+        if (writePos_ >= readPos_) {
+            if (maxLen_ - writePos_ >= dataLen) {
+                memcpy(data_ + writePos_, data, dataLen);
+            } else {
+                memcpy(data_ + writePos_, data, maxLen_ - writePos_);
+                memcpy(data_, data + (maxLen_ - writePos_), dataLen - (maxLen_ - writePos_));
+            }
+        } else {
+            memcpy(data_ + writePos_, data, dataLen);
+        }
+        writePos_ = (writePos_ + dataLen) % maxLen_;
+        curLen_ += dataLen;
+
+        return dataLen;
+    }
+
+    size_t Read(char* data, size_t dataLen)
+    {
+        if (IsEmpty()) {
+            return 0;
+        }
+
+        if (curLen_ < dataLen) {
+            return 0;
+        }
+
+        if (writePos_ >= readPos_) {
+            memcpy(data, data_ + readPos_, dataLen);
+        } else {
+            if (maxLen_ - readPos_ >= dataLen) {
+                memcpy(data_ + readPos_, data, dataLen);
+            } else {
+                memcpy(data, data_ + readPos_, maxLen_ - readPos_);
+                memcpy(data_, data + (maxLen_ - readPos_), dataLen - (maxLen_ - readPos_));
+            }
+        }
+        readPos_ = (readPos_ + dataLen) % maxLen_;
+        curLen_ -= dataLen;
+
+        return dataLen;
     }
 
     size_t MaxLen()
@@ -32,19 +102,36 @@ public:
         return maxLen_;
     }
 
+    size_t CurLen()
+    {
+        return curLen_;
+    }
+
 protected:
     char* data_;
-    size_t curPos_;
-    size_t maxLen_;
+    size_t readPos_; // read 索引，指向了下一个可读取的字节
+    size_t writePos_;// write 索引，指向了下一个可写入的字节
+    size_t curLen_; // 当前长度
+    size_t maxLen_; // 最大长度
 };
 
 class RecvMsgNode : public MsgNode
 {
 public:
-    RecvMsgNode(size_t maxLen) : MsgNode(maxLen)
+    RecvMsgNode(size_t maxLen) : MsgNode(maxLen), parseHeaderComplete_(false)
     {
-
     }
+    void ParseHeaderComplete(bool flag)
+    {
+        parseHeaderComplete_ = flag;
+    }
+    bool ParseHeaderComplete()
+    {
+        return parseHeaderComplete_;
+    }
+
+private:
+    bool parseHeaderComplete_;
 };
 
 class SendMsgNode : public MsgNode
@@ -53,5 +140,6 @@ public:
     SendMsgNode(const char* data, size_t dataLen) : MsgNode(dataLen)
     {
         memcpy(data_, data, dataLen);
+        curLen_ = dataLen;
     }
 };

@@ -17,7 +17,7 @@ include_directories(
 
 add_compile_options(-Wall)
 
-add_executable(main main.cpp threadpool.hpp Server.cpp Session.cpp SessionMgr.cpp)
+add_executable(main main.cpp ThreadPool.h Server.cpp Session.cpp SessionMgr.cpp)
 # add_executable(helloworld helloworld.cpp)
 
 # target_link_libraries(main ${LIBEVENT_LIBRARIES})
