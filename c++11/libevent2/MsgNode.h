@@ -55,6 +55,7 @@ public:
             return 0;
         }
 
+        // 总共就三种状态：1. 写大于读，2. 写小于读，3. 写等于读，1 和 3 可以合并
         if (writePos_ >= readPos_) {
             if (maxLen_ - writePos_ >= dataLen) {
                 memcpy(data_ + writePos_, data, dataLen);
@@ -109,7 +110,7 @@ public:
 
 protected:
     char* data_;
-    size_t readPos_; // read 索引，指向了下一个可读取的字节
+    size_t readPos_; // read 索引，指向了当前可读取的字节
     size_t writePos_;// write 索引，指向了下一个可写入的字节
     size_t curLen_; // 当前长度
     size_t maxLen_; // 最大长度

@@ -17,7 +17,8 @@ void Session::HandleInput(struct bufferevent *bev)
                 // 读入数据不够头部长度，等待下次读入
                 return;
             }
-
+            recvNode_.Write()
+            evbuffer_remove_buffer(input, recvNode_.CurBuf(), MSG_HEADER_LENGTH);
         } else { // 头部处理完成
 
         }

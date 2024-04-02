@@ -134,7 +134,7 @@ static void ReadCb2(struct bufferevent* bev, void* arg)
             header.length = ntohs(header.length);
             // 处理完成头部则设置头部完成标志为 true，为下来处理 body 准备
             ctx->session->ParseHeaderComplete(true);
-            // 分配 body 内存，为存储 body 做准备
+            // 分配 body 内存，为存储 body 做准备，在逻辑线程处理完成消息的时候 delete 分配的 buffer
             ctx->session->AllocBody(header.length);
         } else {
             // 头部已经处理完成，则处理 body，已经接收的数据长度（包含了上次接收长度 curPos 和本次 evbuffer 长度）不足 body 长度则继续等待 body 收全
