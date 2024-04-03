@@ -9,7 +9,7 @@ Session::Session(struct bufferevent* bev, const Address& address) : bev_(bev), a
 
 void Session::Close()
 {
-    SessionMgr::GetInstance()->RemoveSession(id_);
+    SessionMgr::GetInstance().RemoveSession(id_);
     bufferevent_disable(bev_, EV_READ | EV_WRITE);
     bufferevent_free(bev_);
 }

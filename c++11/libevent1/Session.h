@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <climits>
 
+// 这个 Session 的缓冲区效率比较高的，因为 new 出来的 body 
+// 直接会投递到逻辑线程，在逻辑线程处理完成的时候会 delete
 struct bufferevent;
 class Session : public std::enable_shared_from_this<Session>
 {

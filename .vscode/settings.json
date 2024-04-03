@@ -15,6 +15,7 @@
         "array": "cpp",
         "climits": "cpp",
         "cstdint": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "memory": "cpp"
     }
 }

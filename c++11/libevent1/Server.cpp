@@ -92,7 +92,7 @@ void ReadCb(struct bufferevent *bev, void *ctx)
             delete[] p; 
             std::cout << "delete[] p address = " << p << std::endl; 
         });
-        ThreadPool::GetInstance()->Commit([msg, bev]() {
+        ThreadPool::GetInstance().Commit([msg, bev]() {
             std::cout << "msg shared_ptr ref count = " << msg.use_count() << " in thread: " << std::this_thread::get_id() << std::endl;
             Message* message = reinterpret_cast<Message*>(msg.get());
             int ret = bufferevent_write(bev, reinterpret_cast<char*>(message), headerLength + message->header_.length);
@@ -164,7 +164,7 @@ static void ReadCb2(struct bufferevent* bev, void* arg)
                 std::cout << "reply body to client ret = " << ret << std::endl;
             };
             std::cout << "in io thread => message use_count: " << message.use_count() << std::endl;
-            ThreadPool::GetInstance()->Commit(std::move(task));
+            ThreadPool::GetInstance().Commit(std::move(task));
             
             // 重新开始处理头部
             ctx->session->ParseHeaderComplete(false);
@@ -212,7 +212,7 @@ void AcceptCb(struct evconnlistener* evlistener, evutil_socket_t sock, struct so
     Context* ctx = new Context;
     Address address = {"", 0};
     ctx->session = std::make_shared<Session>(bufevent, address);
-    SessionMgr::GetInstance()->AddSession(ctx->session);
+    SessionMgr::GetInstance().AddSession(ctx->session);
     bufferevent_setcb(bufevent, ReadCb2, write_cb, event_cb, ctx);
 
     bufferevent_enable(bufevent, EV_READ);
@@ -242,7 +242,7 @@ int Server::Start()
     }
 
     std::cout << "main thread: " << std::this_thread::get_id() << std::endl;
-    ThreadPool::GetInstance()->Start();
+    ThreadPool::GetInstance().Start();
 
     event_base_dispatch(evbase_);
     evconnlistener_free(evlistener);
@@ -257,6 +257,6 @@ int Server::Start()
 void Server::Stop()
 {
     event_base_loopbreak(evbase_);
-    ThreadPool::GetInstance()->Stop();
-    SessionMgr::GetInstance()->ClearSessions();
+    ThreadPool::GetInstance().Stop();
+    SessionMgr::GetInstance().ClearSessions();
 }
