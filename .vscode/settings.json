@@ -16,6 +16,15 @@
         "climits": "cpp",
         "cstdint": "cpp",
         "thread": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "*.ipp": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "vector": "cpp",
+        "iostream": "cpp",
+        "any": "cpp",
+        "fstream": "cpp",
+        "stop_token": "cpp",
+        "utility": "cpp"
     }
 }

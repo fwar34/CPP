@@ -2,7 +2,8 @@
 #include "Object.h"
 #include "Handler.h"
 #include "Message.h"
-#include "MsgNode.h"
+// #include "MsgNode.h"
+#include "MsgNode2.h"
 #include "CommonDefine.h"
 #include <list>
 #include <memory>
@@ -17,7 +18,7 @@ class Session : public IOHandler, public Object
 {
 public:
     Session(struct bufferevent* bev, const Address& address, IOThread* thd) : 
-        Object(thd), address_(address), recvNode_(UINT16_MAX), bev_(bev)
+        Object(thd), address_(address), headerParseComplete_(false), bev_(bev)
     {
     }
     ~Session()
@@ -41,8 +42,9 @@ public:
 
 private:
     Address address_;
-    RecvMsgNode recvNode_;
-    std::list<SendMsgNode> sendNodes_;
+    Message recvMsg_;
+    bool headerParseComplete_;
+    std::list<MsgSendNode> sendNodes_;
     struct bufferevent* bev_;
 };
 

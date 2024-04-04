@@ -1,5 +1,6 @@
 #include "Server.h"
 #include "IOServicePool.h"
+#include "LogicThreadPool.h"
 #include <iostream>
 #include <csignal>
 
@@ -7,6 +8,7 @@ static void SignalCb(int signo)
 {
 	std::cout << "Caught an interrupt signal; exiting cleanly in one second." << std::endl;
     Nt::IOServicePool::GetInstance().Stop();
+    LogicThreadPool::GetInstance().Stop();
 }
 
 int main()

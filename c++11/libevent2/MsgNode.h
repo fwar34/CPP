@@ -1,4 +1,5 @@
 #pragma once
+// 在自己实现的 reactor 中使用，libevent 已经有了接收缓冲区
 #include <cstring>
 
 // ring buffer，不支持扩容，后续可以添加扩容逻辑
@@ -116,10 +117,10 @@ protected:
     size_t maxLen_; // 最大长度
 };
 
-class RecvMsgNode : public MsgNode
+class MsgRecvNode : public MsgNode
 {
 public:
-    RecvMsgNode(size_t maxLen) : MsgNode(maxLen), parseHeaderComplete_(false)
+    MsgRecvNode(size_t maxLen) : MsgNode(maxLen), parseHeaderComplete_(false)
     {
     }
     void ParseHeaderComplete(bool flag)
@@ -135,10 +136,10 @@ private:
     bool parseHeaderComplete_;
 };
 
-class SendMsgNode : public MsgNode
+class MsgSendNode : public MsgNode
 {
 public:
-    SendMsgNode(const char* data, size_t dataLen) : MsgNode(dataLen)
+    MsgSendNode(const char* data, size_t dataLen) : MsgNode(dataLen)
     {
         memcpy(data_, data, dataLen);
         curLen_ = dataLen;
