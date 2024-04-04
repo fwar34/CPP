@@ -16,6 +16,12 @@ constexpr size_t threadNum = 4;
 class IOServicePool
 {
 public:
+    ~IOServicePool()
+    {
+        for (auto ioThread : ioThreads_) {
+            delete ioThread;
+        }
+    }
     static IOServicePool& GetInstance()
     {
         static IOServicePool instance(threadNum);
@@ -31,7 +37,6 @@ private:
         threadNum_(threadNum)
     {
     }
-    ~IOServicePool() = default;
     IOServicePool(const IOServicePool&) = delete;
     IOServicePool& operator=(const IOServicePool&) = delete;
 

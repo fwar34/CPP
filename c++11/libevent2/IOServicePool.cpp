@@ -17,7 +17,7 @@ int IOServicePool::Start()
         Reactor* reactor = new Reactor;
         IOThread* thd = new IOThread(reactor);
         reactor->SetThread(thd);
-        ioThreads_.push_back(thd);
+        ioThreads_.push_back(thd); // thd 的引用计数为 1
         thd->Start();
     }
 

@@ -6,6 +6,7 @@
 #include <event2/buffer.h>
 #include <event2/listener.h>
 #include <event2/event.h>
+#include <event2/util.h>
 #include <iostream>
 #include <thread>
 
@@ -22,7 +23,7 @@ static void WriteCb(struct bufferevent* bev, void* ctx)
 
 static void EventCb(struct bufferevent *bev, short what, void *ctx)
 {
-    // 释放 bev 和相关的数据结构，减引用计数
+    // 释放 bev 和相关的数据结构，减 Session 引用计数
 }
 
 static void ReadCb(struct bufferevent *bev, void *ctx)
@@ -31,7 +32,24 @@ static void ReadCb(struct bufferevent *bev, void *ctx)
     session->HandleInput(bev);
 }
 
-static void AcceptCb(struct evconnlistener* evlistener, evutil_socket_t sock, struct sockaddr* addr, int socklen, void* user_data)
+static void GetPeerAddress(evutil_socket_t sock, Address& address)
+{
+    struct sockaddr_storage peerAddr;
+    socklen_t peerLen = sizeof(peerAddr);
+
+    if (getpeername(sock, (struct sockaddr*)&peerAddr, &peerLen) == 0) {
+        char ip[INET6_ADDRSTRLEN] = {0};
+        if (peerAddr.ss_family == AF_INET) {
+            struct sockaddr_in* s = (struct sockaddr_in*)&peerAddr;
+            inet_ntop(AF_INET, &s->sin_addr, ip, sizeof(ip));
+            address.ip_.assign(ip, sizeof(ip));
+            address.port_ = ntohs(s->sin_port);
+        }
+    }
+}
+
+static void AcceptCb(struct evconnlistener* evlistener, evutil_socket_t sock, 
+    struct sockaddr* addr, int socklen, void* user_data)
 {
     Reactor* reactor = reinterpret_cast<Reactor*>(user_data);
     struct bufferevent* bufevent = bufferevent_socket_new(
@@ -43,12 +61,15 @@ static void AcceptCb(struct evconnlistener* evlistener, evutil_socket_t sock, st
     }
 
     Address address = {"", 0};
-    Session* session = new Session(bufevent, address, reactor->Thread());
-    SessionMgr::GetInstance().AddSession(session);
+    GetPeerAddress(sock, address);
+    Session* session = new Session(bufevent, address, reactor->Thread(), sock); // 创建的时候引用计数为 1
+    SessionMgr::GetInstance().AddSession(session); // 引用计数加 1，为 2
+    // 保存到回调的上下文，引用计数为 2，不用加引用计数，因为 Session 创建的时候引用计数就为 1
     bufferevent_setcb(bufevent, ReadCb, nullptr, EventCb, session);
-    session->AddRef(); // 保存到 EventCb 的上下文
     bufferevent_enable(bufevent, EV_READ);
     // bufferevent_enable(bufevent, EV_WRITE);
+    std::cout << "IOThread: " << std::this_thread::get_id() << " accept a new client: "
+        << address << std::endl;
 }
 
 static void ReadSockPairCb(struct bufferevent *bev, void *ctx)
@@ -85,17 +106,17 @@ int Reactor::Start()
     // 然后，当新的连接请求到达时，内核会负责将这些连接分发到不同的套接字上，
     // 从而实现负载均衡和并行处理。
     // 这里多个线程同时监听 listen fd
-    evlistener_ = evconnlistener_new_bind(
-        evbase_, AcceptCb, this,
+    evlistener_ = evconnlistener_new_bind(evbase_, AcceptCb, this,
         LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE_PORT,
         -1, (struct sockaddr *)&addr, sizeof(addr));
     if (!evlistener_) {
         std::cout << "iothread: " << std::this_thread::get_id() << " create listener failed!" << std::endl;
-        return NtErrorCode::NtErrorCreateListenFailed;
+        return NtErrorCreateListenFailed;
     }
     std::cout << "iothread tid: " << std::this_thread::get_id() << " listener fd: " 
         << evconnlistener_get_fd(evlistener_) << std::endl;
 
+    // 注册接收 linux 停止信号触发的 sockpair 的事件到 event_base
     struct bufferevent* evSockPairEvent_ = bufferevent_socket_new(evbase_, sockPair_[0], BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(evSockPairEvent_, ReadSockPairCb, nullptr, nullptr, this);
     bufferevent_enable(evSockPairEvent_, EV_READ);

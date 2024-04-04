@@ -17,9 +17,6 @@ public:
     Reactor() : thread_(nullptr)
     {
     }
-    Reactor(IOThread* thread) : thread_(thread)
-    {
-    }
     ~Reactor();
     void SetThread(IOThread* thread)
     {

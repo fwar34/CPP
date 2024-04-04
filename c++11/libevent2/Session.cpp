@@ -79,18 +79,8 @@ int Session::Start()
 {
     return 0;
 }
-int Session::Accept()
-{
-    return 0;
-}
 int Session::Close()
 {
-
-    return 0;
-}
-int Session::Connect()
-{
-
     return 0;
 }
 

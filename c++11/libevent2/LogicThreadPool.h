@@ -1,4 +1,5 @@
 #pragma once
+#include "CommonDefine.h"
 #include <vector>
 #include <deque>
 #include <functional>
@@ -18,7 +19,7 @@ public:
 
     static LogicThreadPool& GetInstance()
     {
-        static LogicThreadPool instance;
+        static LogicThreadPool instance(LOGIC_THREAD_NUM);
         return instance;
     }
 

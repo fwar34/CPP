@@ -3,10 +3,13 @@
 #include "LogicThreadPool.h"
 #include <iostream>
 #include <csignal>
+#include <thread>
 
 static void SignalCb(int signo)
 {
-	std::cout << "Caught an interrupt signal; exiting cleanly in one second." << std::endl;
+	std::cout << "Caught an interrupt signal; exiting "
+        "cleanly in one second. main thread id: " 
+        << std::this_thread::get_id() << std::endl;
     Nt::IOServicePool::GetInstance().Stop();
     LogicThreadPool::GetInstance().Stop();
 }
