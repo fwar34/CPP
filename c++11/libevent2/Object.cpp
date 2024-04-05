@@ -5,7 +5,14 @@
 
 namespace Nt
 {
-    
+Object::~Object()
+{
+    if (thread_) {
+        thread_->ReleaseRef();
+        thread_ = nullptr;
+    }
+}
+
 void Object::SendSignal(const Signal& s)
 {
     AddRef();

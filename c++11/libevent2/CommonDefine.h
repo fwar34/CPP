@@ -16,12 +16,7 @@ struct Address
 };
 
 // 返回 ostream 引用，支持链式操作
-std::ostream& operator<<(std::ostream& os, const Address& address)
-{
-    os << "[ip: " << address.ip_ << " port: " << address.port_ << "]";
-    return os;
-}
-
+std::ostream& operator<<(std::ostream& os, const Address& address);
 bool operator<(const Address& left, const Address& right);
 
 }

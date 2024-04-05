@@ -1,5 +1,6 @@
 #pragma once
 #include "CommonDefine.h"
+#include "ConferenceMgr.h"
 #include <vector>
 #include <deque>
 #include <functional>
@@ -8,6 +9,9 @@
 #include <atomic>
 #include <thread>
 #include <future>
+
+namespace Nt
+{
 
 class LogicThreadPool
 {
@@ -109,3 +113,5 @@ private:
     std::atomic<bool> stop_;
     std::vector<std::thread> threads_;
 };
+    
+} // namespace Nt

@@ -12,6 +12,7 @@ void IOThread::SendSignal(const Signal& s)
 
 void IOThread::Start()
 {
+    AddRef(); // 创建的线程持有 this，引用计数加 1
     thread_ = std::thread([this] {
         if (dispatch_->Start() != NtErrorSucess) {
             std::cout << "iothread: " << std::this_thread::get_id() << "error, exit!" << std::endl;

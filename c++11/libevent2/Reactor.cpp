@@ -2,6 +2,7 @@
 #include "Session.h"
 #include "SessionMgr.h"
 #include "ErrorCode.h"
+#include "IOThread.h"
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 #include <event2/listener.h>
@@ -9,6 +10,7 @@
 #include <event2/util.h>
 #include <iostream>
 #include <thread>
+#include <arpa/inet.h>
 
 namespace Nt
 {
@@ -62,7 +64,9 @@ static void AcceptCb(struct evconnlistener* evlistener, evutil_socket_t sock,
 
     Address address = {"", 0};
     GetPeerAddress(sock, address);
-    Session* session = new Session(bufevent, address, reactor->Thread(), sock); // 创建的时候引用计数为 1
+    reactor->Thread()->AddRef(); // Session 持有 thread，引用计数加 1
+    // session 创建的时候引用计数为 1
+    Session* session = new Session(bufevent, address, reactor->Thread(), sock);
     SessionMgr::GetInstance().AddSession(session); // 引用计数加 1，为 2
     // 保存到回调的上下文，引用计数为 2，不用加引用计数，因为 Session 创建的时候引用计数就为 1
     bufferevent_setcb(bufevent, ReadCb, nullptr, EventCb, session);

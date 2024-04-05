@@ -42,7 +42,7 @@ public:
     Object(IOThread* thd) : thread_(thd)
     {
     }
-    virtual ~Object() = default;
+    virtual ~Object();
     virtual void ProcessSignal(Signal::SignalId id);
     void SendSignal(const Signal& s);
     void SendStart();

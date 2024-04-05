@@ -17,10 +17,10 @@ public:
 class IOHandler : public EventHandler
 {
 public:
-    virtual int Accept() = 0;
-    virtual int Start() = 0;
+    virtual int Accept() { return 0; }
+    virtual int Start() { return 0; }
     virtual int Connect() { return 0; }
-    virtual int Close() = 0;
+    virtual int Close() { return 0; }
 };
 
 };

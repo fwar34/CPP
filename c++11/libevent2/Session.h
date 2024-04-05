@@ -9,6 +9,7 @@
 #include <memory>
 #include <cstdint>
 #include <iostream>
+#include <event2/util.h>
 
 struct bufferevent;
 namespace Nt

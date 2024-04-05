@@ -1,7 +1,11 @@
 #include "ConferenceMgr.h"
 #include "Conference.h"
 
-ConferenceMgr ConfMgrs[LOGIC_THREAD_NUM];
+namespace Nt
+{
+
+// ConferenceMgr ConfMgrs[LOGIC_THREAD_NUM];
+// std::array<std::thread::id, LOGIC_THREAD_NUM> ConfMgrs;
 
 void ConferenceMgr::AddConference(std::shared_ptr<Conference>& conf)
 {
@@ -16,7 +20,7 @@ void ConferenceMgr::DelConference(uint32_t confId)
     conferences_.erase(confId);
 }
 
-std::shared_ptr<Conference> FindConference(uint32_t confId)
+std::shared_ptr<Conference> ConferenceMgr::FindConference(uint32_t confId)
 {
     auto it = conferences_.find(confId);
     if (it == conferences_.end()) {
@@ -24,3 +28,17 @@ std::shared_ptr<Conference> FindConference(uint32_t confId)
     }
     return it->second;
 }
+
+void ConferenceMgr::DispatchCommand(std::shared_ptr<Message> message)
+{
+    MessageHeader& header = message->header_;
+    std::shared_ptr<Conference> conf = FindConference(header.confId_);
+    if (!conf) {
+        conf = std::make_shared<Conference>(header.confId_);
+        conferences_[header.confId_] = conf;
+    }
+
+    conf->DispatchCommand(message);
+}
+
+} // namespace Nt

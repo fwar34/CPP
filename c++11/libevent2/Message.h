@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <memory>
+#include <iterator>
 
 namespace Nt
 {
@@ -36,5 +38,7 @@ struct Message
         return ss.str();
     }
 };
+
+std::ostream& operator<<(std::ostream& os, std::shared_ptr<Message>& message);
     
 } // namespace Nt

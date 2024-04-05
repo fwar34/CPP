@@ -1,4 +1,5 @@
 #include "Session.h"
+#include "ConferenceMgr.h"
 #include "LogicThreadPool.h"
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
@@ -6,6 +7,7 @@
 
 namespace Nt
 {
+thread_local ConferenceMgr confMgr;
 
 void Session::HandleInput(struct bufferevent *bev)
 {
@@ -55,7 +57,11 @@ void Session::HandleInput(struct bufferevent *bev)
             std::shared_ptr<Message> message = std::make_shared<Message>(std::move(recvMsg_));
             // 消息发送到逻辑线程去处理
             LogicThreadPool::GetInstance().Commit(recvMsg_.header_.confId_, [message] {
-                std::cout << "Logic thread: " << std::this_thread::get_id() << " " + message->Dump() << std::endl;
+                std::cout << "Logic thread: " << std::this_thread::get_id() 
+                    << " confMgr address: " << &confMgr << " " << message << std::endl;
+                // std::thread::id tid = std::this_thread::get_id();
+                // ConferenceMgr& mgr = ConfMgrs[tid % LOGIC_THREAD_NUM];
+                confMgr.DispatchCommand(message); // 进行逻辑处理
             });
         }
     }

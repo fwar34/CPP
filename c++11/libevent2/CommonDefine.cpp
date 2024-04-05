@@ -33,4 +33,10 @@ bool operator<(const Address& left, const Address& right)
     }
 }
 
+std::ostream& operator<<(std::ostream& os, const Address& address)
+{
+    os << "[ip: " << address.ip_ << " port: " << address.port_ << "]";
+    return os;
+}
+
 } // namespace Nt

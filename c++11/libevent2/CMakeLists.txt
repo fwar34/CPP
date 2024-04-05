@@ -18,7 +18,8 @@ add_subdirectory(${IMPORT_SRC} ${IMPORT_BUILD} EXCLUDE_FROM_ALL)
 
 add_executable(main main.cpp Server.cpp Session.cpp 
     IOServicePool.cpp SessionMgr.cpp CommonDefine.cpp Signal.cpp
-    IOThread.cpp Object.cpp Reactor.cpp)
+    IOThread.cpp Object.cpp Reactor.cpp Conference.cpp
+    ConferenceMgr.cpp Message.cpp)
 add_compile_options(-Wall)
 # add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 
