@@ -25,6 +25,8 @@
         "any": "cpp",
         "fstream": "cpp",
         "stop_token": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "numeric": "cpp",
+        "streambuf": "cpp"
     }
 }

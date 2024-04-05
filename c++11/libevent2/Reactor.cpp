@@ -66,7 +66,8 @@ static void AcceptCb(struct evconnlistener* evlistener, evutil_socket_t sock,
     GetPeerAddress(sock, address);
     reactor->Thread()->AddRef(); // Session 持有 thread，引用计数加 1
     // session 创建的时候引用计数为 1
-    Session* session = new Session(bufevent, address, reactor->Thread(), sock);
+    Session* session = new Session(bufevent, address, reactor->Thread());
+    session->Start();
     SessionMgr::GetInstance().AddSession(session); // 引用计数加 1，为 2
     // 保存到回调的上下文，引用计数为 2，不用加引用计数，因为 Session 创建的时候引用计数就为 1
     bufferevent_setcb(bufevent, ReadCb, nullptr, EventCb, session);
@@ -126,6 +127,19 @@ int Reactor::Start()
     bufferevent_enable(evSockPairEvent_, EV_READ);
 
     return 0;
+}
+
+struct event* Reactor::RegisterEvent(int fd, int event, 
+    void (*cb)(evutil_socket_t, short, void*), void* arg)
+{
+    struct event* ev = event_new(evbase_, fd, event, cb, arg);
+    event_add(ev, nullptr);
+    return ev;
+}
+
+int Reactor::CancelEvent(struct event* ev)
+{
+    return event_del(ev);
 }
 
 void Reactor::DispatchEvents()

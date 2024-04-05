@@ -8,6 +8,7 @@
 namespace Nt
 {
 
+class Session;
 class User;
 class Conference
 {
@@ -20,7 +21,7 @@ public:
     uint32_t Id() { return id_; }
     void AddUser(std::shared_ptr<User>& user);
     void DelUser(uint32_t userId);
-    void DispatchCommand(std::shared_ptr<Message> message);
+    void DispatchCommand(std::shared_ptr<Message> message, Session* session);
 
 private:
     uint32_t id_;

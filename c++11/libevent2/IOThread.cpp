@@ -38,17 +38,16 @@ void IOThread::Join()
 
 static void SignalCb(evutil_socket_t fd, short events, void *arg)
 {
-
+    IOThread* thread = reinterpret_cast<IOThread*>(arg);
+    thread->GetSignalBox().ProcessSignals();
 }
 
 void IOThread::RegisterSignalEvent()
 {
-    Reactor* reactor = dynamic_cast<Reactor*>(dispatch_);
-    signalEvent_ = event_new(reactor->EventBase(), signalBox_.EventFd(), 
-        EV_READ, SignalCb, this);
-    event_add(signalEvent_, nullptr);
     std::cout << "iothread tid: " << std::this_thread::get_id()
         << " register signal event" << std::endl;
+    AddRef(); // 将 IOThread 注册到 reactor 中去，引用计数加 1
+    signalEvent_ = reactor->RegisterEvent(signalBox_.EventFd(), EV_READ, SignalCb, this);
 }
 
 } // namespace Nt

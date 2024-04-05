@@ -2,26 +2,26 @@
 #include "Object.h"
 #include "Handler.h"
 #include "Message.h"
-// #include "MsgNode.h"
 #include "MsgNode2.h"
+#include "SendQueue.h"
 #include "CommonDefine.h"
 #include <list>
 #include <memory>
 #include <cstdint>
 #include <iostream>
+#include <mutex>
 #include <event2/util.h>
 
 struct bufferevent;
 namespace Nt
 {
 
-class Session : public IOHandler, public Object
+class Session final : public IOHandler, public Object
 {
 public:
-    Session(struct bufferevent* bev, const Address& address, 
-        IOThread* thd, evutil_socket_t sock) : 
+    Session(struct bufferevent* bev, const Address& address, IOThread* thd) : 
         Object(thd), address_(address), headerParseComplete_(false), 
-        bev_(bev), sock_(sock)
+        sendQueueMaxLength_(SEND_QUEUE_MAX_LENGTH), bev_(bev)
     {
     }
     ~Session()
@@ -33,10 +33,10 @@ public:
     {
         return address_;
     }
-
-    evutil_socket_t SockFd()
+    bool SendMessage(std::shared_ptr<Message>& msg);
+    SendQueue& GetSendQueue()
     {
-        return sock_;
+        return sendQueue_;
     }
 
     void HandleInput(struct bufferevent* bev) override;
@@ -49,10 +49,9 @@ public:
 private:
     Address address_;
     Message recvMsg_;
+    SendQueue sendQueue_;
     bool headerParseComplete_;
-    std::list<MsgSendNode> sendNodes_;
     struct bufferevent* bev_;
-    evutil_socket_t sock_;
 };
 
 }

@@ -23,6 +23,9 @@ public:
         thread_ = thread;
     }
     int Start() override;
+    struct event* RegisterEvent(int fd, int event, 
+        void (*cb)(evutil_socket_t, short, void*), void* arg) override;
+    int CancelEvent(struct event* ev) override;
     void DispatchEvents() override;
     struct event_base* EventBase()
     {

@@ -12,6 +12,9 @@ public:
         evutil_socketpair(AF_UNIX, SOCK_STREAM, 0, sockPair_);
     }
     virtual ~Dispatch() = default;
+    virtual struct event* RegisterEvent(int fd, int event, 
+        void (*cb)(evutil_socket_t, short, void*), void* arg) = 0;
+    virtual int CancelEvent(struct event*) = 0;
     virtual int Start() = 0;
     virtual void DispatchEvents() = 0;
     virtual bool Stop()

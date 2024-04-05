@@ -25,6 +25,14 @@ public:
             delete dispatch_;
         }
     }
+    Dispatch* GetDispatch()
+    {
+        return dispatch_;
+    }
+    SignalBox& GetSignalBox()
+    {
+        return signalBox_;
+    }
     
     void SendSignal(const Signal& s);
     void Start();

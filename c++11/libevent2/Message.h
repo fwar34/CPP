@@ -34,7 +34,8 @@ struct Message
     std::string Dump()
     {
         std::stringstream ss;
-        ss << "msgId: " << header_.msgId_ << " bodyLength: " << header_.bodyLength_ << " confId: " << header_.confId_;
+        ss << "msgId: " << header_.msgId_ << " bodyLength: " 
+            << header_.bodyLength_ << " confId: " << header_.confId_;
         return ss.str();
     }
 };

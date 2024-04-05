@@ -10,6 +10,7 @@
 namespace Nt
 {
 
+class Session;
 class Conference;
 class ConferenceMgr
 {
@@ -18,7 +19,7 @@ public:
     void AddConference(std::shared_ptr<Conference>& conf);
     void DelConference(uint32_t confId);
     std::shared_ptr<Conference> FindConference(uint32_t confId);
-    void DispatchCommand(std::shared_ptr<Message> message);
+    void DispatchCommand(std::shared_ptr<Message> message, Session* session);
 
 private:
     // unordered_map 不排序，插入删除查找O(1)，map 排序，插入删除查找O（logN）

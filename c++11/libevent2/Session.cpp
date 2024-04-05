@@ -9,6 +9,10 @@ namespace Nt
 {
 thread_local ConferenceMgr confMgr;
 
+bool Session::SendMessage(std::shared_ptr<Message>& message)
+{
+}
+
 void Session::HandleInput(struct bufferevent *bev)
 {
     struct evbuffer* input = bufferevent_get_input(bev);
@@ -56,12 +60,14 @@ void Session::HandleInput(struct bufferevent *bev)
             // 然后传递到闭包，延长 Message 的生命周期
             std::shared_ptr<Message> message = std::make_shared<Message>(std::move(recvMsg_));
             // 消息发送到逻辑线程去处理
-            LogicThreadPool::GetInstance().Commit(recvMsg_.header_.confId_, [message] {
+            AddRef(); // 将 Session 也传递到逻辑线程了，所以引用计数加 1
+            LogicThreadPool::GetInstance().Commit(recvMsg_.header_.confId_, [message, this] {
                 std::cout << "Logic thread: " << std::this_thread::get_id() 
                     << " confMgr address: " << &confMgr << " " << message << std::endl;
                 // std::thread::id tid = std::this_thread::get_id();
                 // ConferenceMgr& mgr = ConfMgrs[tid % LOGIC_THREAD_NUM];
-                confMgr.DispatchCommand(message); // 进行逻辑处理
+                confMgr.DispatchCommand(message, this); // 进行逻辑处理
+                ReleaseRef(); // 执行完消息处理减去 session 的引用计数
             });
         }
     }
@@ -81,8 +87,21 @@ void Session::HandleClose(struct bufferevent *bev)
 void Session::HandleTimeout()
 {
 }
+
+static void SendEventCb(evutil_socket_t sock, short event, void* arg)
+{
+    Session* session = reinterpret_cast<Session*>(arg);
+    session->GetSendQueue().ProcessSend();
+}
+
 int Session::Start()
 {
+    // 注册发送队列的可读事件
+    struct event *ev = thread_->GetDispatch()->RegisterEvent(
+        sendQueue_->EventFd(), EV_READ, SendEventCb, this);
+    sendQueue_->SetEvent(ev);
+    AddRef(); // 将 Session 注册到 reactor 中去，引用计数加 1
+
     return 0;
 }
 int Session::Close()
