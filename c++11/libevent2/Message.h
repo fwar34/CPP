@@ -12,7 +12,9 @@ namespace Nt
 #pragma pack(4)
 struct MessageHeader
 {
-    MessageHeader() = default;
+    // MessageHeader() = default;
+    // MessageHeader(MessageHeader&&) = default;
+    // MessageHeader& operator=(MessageHeader&&) = default;
     uint32_t msgId_ = 0;
     uint32_t bodyLength_ = 0;
     uint32_t confId_ = 0;
@@ -41,5 +43,6 @@ struct Message
 };
 
 std::ostream& operator<<(std::ostream& os, std::shared_ptr<Message>& message);
+std::ostream& operator<<(std::ostream& os, Message& message);
     
 } // namespace Nt

@@ -32,6 +32,7 @@ std::shared_ptr<Conference> ConferenceMgr::FindConference(uint32_t confId)
 void ConferenceMgr::DispatchCommand(std::shared_ptr<Message> message, Session* session)
 {
     MessageHeader& header = message->header_;
+    // std::cout << "HHHH header[" << message->Dump() << "]" << std::endl;
     std::shared_ptr<Conference> conf = FindConference(header.confId_);
     if (!conf) {
         conf = std::make_shared<Conference>(header.confId_);

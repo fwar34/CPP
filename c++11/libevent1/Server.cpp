@@ -115,7 +115,7 @@ static void ReadCb2(struct bufferevent* bev, void* arg)
                 break;
             }
 
-            size_t lens = evbuffer_get_length(input);
+            // size_t lens = evbuffer_get_length(input);
 
             // 头部接收完成，则拷贝头部字段到 session 对应字段
             // 1. 处理 type
@@ -158,6 +158,7 @@ static void ReadCb2(struct bufferevent* bev, void* arg)
                 std::cout << "in logic thread => message use_count: " << message.use_count() << std::endl;
                 std::cout << "logic thread id: " << std::this_thread::get_id() << " recv msg: " << message->Dump() << std::endl;
                 // 回复客户端
+                // bufferevent 添加消息到发送队列，然后触发 bev 对应的事件来进行发送
                 int ret = bufferevent_write(bev, &message->header_, sizeof(message->header_));
                 std::cout << "reply header to client ret = " << ret << std::endl;
                 bufferevent_write(bev, message->buf_, message->header_.length);
@@ -165,7 +166,10 @@ static void ReadCb2(struct bufferevent* bev, void* arg)
             };
             std::cout << "in io thread => message use_count: " << message.use_count() << std::endl;
             ThreadPool::GetInstance().Commit(std::move(task));
-            
+
+            // bufferevent_enable(bev, EV_WRITE);
+            // std::cout << "enable write event" << std::endl;
+
             // 重新开始处理头部
             ctx->session->ParseHeaderComplete(false);
             ctx->session->BufferReset();
@@ -177,6 +181,17 @@ static void write_cb(struct bufferevent* bev, void* ctx)
 {
     static int count = 0;
     std::cout << "count = " << count++ << std::endl;
+    // Context* ctx = reinterpret_cast<Context*>(ctx);
+    // evbuffer* input = bufferevent_get_input(bev);
+    // MessageHeader& header = ctx->session->Header();
+
+    const char* reply = "this is reply message!";
+    int ret = bufferevent_write(bev, reply, strlen(reply) + 1);
+    std::cout << "reply to client ret = " << ret << " in thread: " << std::this_thread::get_id() << std::endl;
+    if (ret == 0) {
+        bufferevent_disable(bev, EV_WRITE);
+        std::cout << "disable write event" << std::endl;
+    }
 }
 
 static void event_cb(struct bufferevent *bev, short what, void *ctx)
@@ -216,7 +231,7 @@ void AcceptCb(struct evconnlistener* evlistener, evutil_socket_t sock, struct so
     bufferevent_setcb(bufevent, ReadCb2, write_cb, event_cb, ctx);
 
     bufferevent_enable(bufevent, EV_READ);
-    bufferevent_enable(bufevent, EV_WRITE);
+    // bufferevent_enable(bufevent, EV_WRITE);
 }
 
 int Server::Start()

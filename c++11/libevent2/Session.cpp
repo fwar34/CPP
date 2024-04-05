@@ -1,4 +1,5 @@
 #include "Session.h"
+#include "IOThread.h"
 #include "ConferenceMgr.h"
 #include "LogicThreadPool.h"
 #include <event2/bufferevent.h>
@@ -11,6 +12,12 @@ thread_local ConferenceMgr confMgr;
 
 bool Session::SendMessage(std::shared_ptr<Message>& message)
 {
+    static std::string response = "This is reponse ";
+    MsgSendNode msg(response.data(), response.size());
+    // message.Serial(&msg);
+
+    sendQueue_.Push(msg);
+    return true;
 }
 
 void Session::HandleInput(struct bufferevent *bev)
@@ -56,9 +63,13 @@ void Session::HandleInput(struct bufferevent *bev)
             }
             headerParseComplete_ = false;
 
+            // std::cout << "test recvheader[" << recvMsg_.Dump() << "]" << std::endl;
+            // std::cout << "test recvmesg[" << recvMsg_ << "]" << std::endl;
+
             // Message 没有拷贝语义，所以调用 Message 的移动构造生成一个 shared_ptr<Message>，
             // 然后传递到闭包，延长 Message 的生命周期
             std::shared_ptr<Message> message = std::make_shared<Message>(std::move(recvMsg_));
+            std::cout << "test shared message[" << message << "]" << std::endl;
             // 消息发送到逻辑线程去处理
             AddRef(); // 将 Session 也传递到逻辑线程了，所以引用计数加 1
             LogicThreadPool::GetInstance().Commit(recvMsg_.header_.confId_, [message, this] {
@@ -91,15 +102,16 @@ void Session::HandleTimeout()
 static void SendEventCb(evutil_socket_t sock, short event, void* arg)
 {
     Session* session = reinterpret_cast<Session*>(arg);
-    session->GetSendQueue().ProcessSend();
+    session->GetSendQueue().ProcessSend(true);
 }
 
 int Session::Start()
 {
     // 注册发送队列的可读事件
     struct event *ev = thread_->GetDispatch()->RegisterEvent(
-        sendQueue_->EventFd(), EV_READ, SendEventCb, this);
-    sendQueue_->SetEvent(ev);
+        sendQueue_.EventFd(), EV_READ, SendEventCb, this);
+    std::cout << "Session Start queue eventfd: " << sendQueue_.EventFd() << std::endl;
+    sendQueue_.SetEvent(ev);
     AddRef(); // 将 Session 注册到 reactor 中去，引用计数加 1
 
     return 0;

@@ -48,7 +48,7 @@ public:
     void SendStart();
     void SendStop();
 
-private:
+protected:
     IOThread* thread_;
 };
 

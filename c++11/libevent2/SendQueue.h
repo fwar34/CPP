@@ -10,12 +10,17 @@ namespace Nt
 {
 constexpr size_t SEND_QUEUE_MAX_LENGTH = 1024 * 1024;
 
+class Session;
 class SendQueue
 {
 public:
-    SendQueue() : sendQueueMaxLength_(SEND_QUEUE_MAX_LENGTH), event_(nullptr)
+    SendQueue(Session* session) : sendQueueMaxLength_(SEND_QUEUE_MAX_LENGTH), 
+        session_(session), event_(nullptr)
     {
+        // 这里的 session 不要引用计数加 1，否则 Session 持有 SendQueue，
+        // SendQueue 持有 session，互相引用造成资源没有释放
         eventFd_ = eventfd(0, 0);
+        std::cout << "create eventfd ret: " << eventFd_ << std::endl;
     }
     ~SendQueue()
     {
@@ -30,13 +35,14 @@ public:
         event_ = ev;
     }
 
-    bool Push(MsgSendNode* msg);
-    void ProcessSend();
+    bool Push(const MsgSendNode& msg);
+    void ProcessSend(bool needReadEventFd);
 
 private:
     std::mutex mutex_;
     size_t sendQueueMaxLength_;
     std::list<MsgSendNode> sendNodes_;
+    Session* session_;
     struct event* event_;
     int eventFd_;
 };

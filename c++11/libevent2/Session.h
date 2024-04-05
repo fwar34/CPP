@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <iostream>
 #include <mutex>
+#include <event2/bufferevent.h>
 #include <event2/util.h>
 
 struct bufferevent;
@@ -20,13 +21,18 @@ class Session final : public IOHandler, public Object
 {
 public:
     Session(struct bufferevent* bev, const Address& address, IOThread* thd) : 
-        Object(thd), address_(address), headerParseComplete_(false), 
-        sendQueueMaxLength_(SEND_QUEUE_MAX_LENGTH), bev_(bev)
+        Object(thd), address_(address), sendQueue_(this), 
+        headerParseComplete_(false), bev_(bev)
     {
     }
     ~Session()
     {
         std::cout << "~Session called!" << std::endl;
+    }
+
+    evutil_socket_t GetSockFd()
+    {
+        return bufferevent_getfd(bev_);
     }
 
     const Address& GetAddress()
@@ -37,6 +43,10 @@ public:
     SendQueue& GetSendQueue()
     {
         return sendQueue_;
+    }
+    struct bufferevent* GetBufferEvent()
+    {
+        return bev_;
     }
 
     void HandleInput(struct bufferevent* bev) override;

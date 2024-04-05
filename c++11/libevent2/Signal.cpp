@@ -23,9 +23,12 @@ void SignalBox::ProcessSignals()
 
 void SignalBox::Push(const Signal& s)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    bool needNotify = signals_.empty();
-    signals_.push_back(s);
+    bool needNotify = false;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        needNotify = signals_.empty();
+        signals_.push_back(s);
+    }
 
     if (needNotify) {
         int value = 1;

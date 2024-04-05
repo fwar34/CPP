@@ -47,7 +47,8 @@ void IOThread::RegisterSignalEvent()
     std::cout << "iothread tid: " << std::this_thread::get_id()
         << " register signal event" << std::endl;
     AddRef(); // 将 IOThread 注册到 reactor 中去，引用计数加 1
-    signalEvent_ = reactor->RegisterEvent(signalBox_.EventFd(), EV_READ, SignalCb, this);
+    signalEvent_ = dispatch_->RegisterEvent(
+        signalBox_.EventFd(), EV_READ, SignalCb, this);
 }
 
 } // namespace Nt

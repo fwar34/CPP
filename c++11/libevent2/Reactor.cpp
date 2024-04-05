@@ -19,6 +19,11 @@ constexpr unsigned short PORT = 18888;
 
 static void WriteCb(struct bufferevent* bev, void* ctx)
 {
+    Session* session = reinterpret_cast<Session*>(ctx);
+    bufferevent_disable(session->GetBufferEvent(), EV_WRITE);
+    std::cout << "disable writecb fd: " << session->GetBufferEvent() << std::endl;
+    session->GetSendQueue().ProcessSend(false);
+
     static int count = 0;
     std::cout << "count = " << count++ << std::endl;
 }
@@ -70,8 +75,9 @@ static void AcceptCb(struct evconnlistener* evlistener, evutil_socket_t sock,
     session->Start();
     SessionMgr::GetInstance().AddSession(session); // 引用计数加 1，为 2
     // 保存到回调的上下文，引用计数为 2，不用加引用计数，因为 Session 创建的时候引用计数就为 1
-    bufferevent_setcb(bufevent, ReadCb, nullptr, EventCb, session);
+    bufferevent_setcb(bufevent, ReadCb, WriteCb, EventCb, session);
     bufferevent_enable(bufevent, EV_READ);
+    bufferevent_disable(bufevent, EV_WRITE);
     // bufferevent_enable(bufevent, EV_WRITE);
     std::cout << "IOThread: " << std::this_thread::get_id() << " accept a new client: "
         << address << std::endl;

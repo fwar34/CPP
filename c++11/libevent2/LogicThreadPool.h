@@ -107,7 +107,8 @@ private:
     {
     }
     size_t threadNum_;
-    std::vector<std::deque<Task>> tasks_; // 每个线程处理一个队列，实际上可以将线程、任务队列和条件变量封装在一起
+    // 每个线程处理一个队列，实际上可以将线程、任务队列和条件变量封装在一起，就不会惊群
+    std::vector<std::deque<Task>> tasks_;
     std::mutex mutex_;
     std::condition_variable cv_;
     std::atomic<bool> stop_;

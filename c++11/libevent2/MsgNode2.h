@@ -112,10 +112,19 @@ public:
         buffer_(data, data + dataLen), readPos_(0)
     {
     }
+    MsgSendNode(const MsgSendNode&) = default;
+    MsgSendNode& operator=(const MsgSendNode&) = default;
+    MsgSendNode(MsgSendNode&&) = default;
+    MsgSendNode& operator=(MsgSendNode&&) = default;
 
     const char* GetData() const
     {
         return buffer_.data();
+    }
+
+    size_t GetDataSize()
+    {
+        return buffer_.size();
     }
     
     void SetReadPos(size_t dataLen)
