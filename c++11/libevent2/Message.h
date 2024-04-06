@@ -5,6 +5,7 @@
 #include <sstream>
 #include <memory>
 #include <iterator>
+#include <iostream>
 
 namespace Nt
 {
@@ -31,8 +32,22 @@ struct Message
     std::vector<char> body_;
     Message(const Message&) = delete;
     Message& operator=(const Message&) = delete;
-    Message(Message&& other) noexcept = default;
-    Message& operator=(Message&& other) noexcept = default;
+    // Message(Message&& other) noexcept = default;
+    Message(Message&& other) noexcept
+    {
+        std::cout << "Message move constructor called!" << std::endl;
+        header_ = other.header_;
+        // body_.swap(other.body_);
+        body_ = std::move(other.body_);
+    }
+    // Message& operator=(Message&& other) noexcept = default;
+    Message& operator=(Message&& other) noexcept
+    {
+        header_ = other.header_;
+        // body_.swap(other.body_);
+        body_ = std::move(other.body_);
+        return *this;
+    }
     std::string Dump()
     {
         std::stringstream ss;
@@ -44,5 +59,7 @@ struct Message
 
 std::ostream& operator<<(std::ostream& os, std::shared_ptr<Message>& message);
 std::ostream& operator<<(std::ostream& os, Message& message);
+std::string PrintMessage(const std::shared_ptr<Message>& message);
+void PrintByteArray(const std::vector<char>& body);
     
 } // namespace Nt

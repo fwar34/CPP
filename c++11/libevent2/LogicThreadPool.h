@@ -79,16 +79,27 @@ public:
             return std::future<RetType>();
         }
         // packaged_task 没有拷贝语义，所以需要用 shared_ptr 来控制声明周期，传递到闭包中来延长声明周期
-        auto task = std::make_shared<std::packaged_task<RetType()>>([&] {
+#if 0
+        auto task = std::make_shared<std::packaged_task<RetType()>>([&] { // 这里闭包不能使用 & 捕获局部变量，切线程后资源就会被释放
             std::forward<F>(f)(std::forward<Args>(args)...);
         });
+#else
+        // TODO：使用可变元组来传递可变模板参数，在函数闭包内部解包可变元组
+        // auto task = std::make_shared<std::packaged_task<RetType()>>(
+        //     [fi = std::forward<F>(f), argsi = std::make_tuple(std::forward<Args>(args)...)] mutable {
+        //         (std::forward<F>(fi)(std::get<std::size_t>(argsi)), ...);
+        // });
+
+        auto task = std::make_shared<std::packaged_task<RetType()>>(
+            std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+#endif
         std::future<RetType> future = task->get_future();
         {
             uint32_t index = confId % threadNum_;
             std::cout << "confId: " << confId << " threadNum_: " << threadNum_ << " index: " << index << std::endl;
             std::cout << "tasks_ size = " << tasks_.size() << std::endl;
             std::lock_guard<std::mutex> lock(mutex_);
-            tasks_[index].emplace_back([task] {
+            tasks_[index].emplace_back([task = std::move(task)] {
                 (*task)();
             });
         }

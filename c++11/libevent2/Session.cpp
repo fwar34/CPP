@@ -70,16 +70,43 @@ void Session::HandleInput(struct bufferevent *bev)
             // 然后传递到闭包，延长 Message 的生命周期
             std::shared_ptr<Message> message = std::make_shared<Message>(std::move(recvMsg_));
             std::cout << "test shared message[" << message << "]" << std::endl;
+            std::cout << "test22 shared message use_count: " << message.use_count() << std::endl;
             // 消息发送到逻辑线程去处理
             AddRef(); // 将 Session 也传递到逻辑线程了，所以引用计数加 1
-            LogicThreadPool::GetInstance().Commit(recvMsg_.header_.confId_, [message, this] {
+#if 0
+            LogicThreadPool::GetInstance().Commit(message->header_.confId_, [message, this] {
                 std::cout << "Logic thread: " << std::this_thread::get_id() 
                     << " confMgr address: " << &confMgr << " " << message << std::endl;
+                
+                std::cout << "fengliang-> use_count: " << message.use_count() << std::endl;
+                std::cout << "fengliang->" << PrintMessage(message);
+                std::cout << "fengliang->body size:" << message->body_.size() << std::endl;
+                PrintByteArray(message->body_);
+                
                 // std::thread::id tid = std::this_thread::get_id();
                 // ConferenceMgr& mgr = ConfMgrs[tid % LOGIC_THREAD_NUM];
                 confMgr.DispatchCommand(message, this); // 进行逻辑处理
                 ReleaseRef(); // 执行完消息处理减去 session 的引用计数
             });
+#else
+            std::function<void()> task = [message, this] {
+                std::cout << "Logic thread: " << std::this_thread::get_id() 
+                    << " confMgr address: " << &confMgr << " " << message << std::endl;
+                
+                std::cout << "fengliang-> use_count: " << message.use_count() << std::endl;
+                std::cout << "fengliang->" << PrintMessage(message);
+                std::cout << "fengliang->body size:" << message->body_.size() << std::endl;
+                PrintByteArray(message->body_);
+                
+                // std::thread::id tid = std::this_thread::get_id();
+                // ConferenceMgr& mgr = ConfMgrs[tid % LOGIC_THREAD_NUM];
+                confMgr.DispatchCommand(message, this); // 进行逻辑处理
+                ReleaseRef(); // 执行完消息处理减去 session 的引用计数
+            };
+            LogicThreadPool::GetInstance().Commit(
+                message->header_.confId_, std::move(task));
+            std::cout << "end message-> use_count: " << message.use_count() << std::endl;
+#endif
         }
     }
 
@@ -107,9 +134,9 @@ static void SendEventCb(evutil_socket_t sock, short event, void* arg)
 
 int Session::Start()
 {
-    // 注册发送队列的可读事件
+    // 注册发送队列的可读事件，可以注册	EV_PERSIST 标志，不用手动每次再重新注册可读事件
     struct event *ev = thread_->GetDispatch()->RegisterEvent(
-        sendQueue_.EventFd(), EV_READ, SendEventCb, this);
+        sendQueue_.EventFd(), EV_READ | EV_PERSIST, SendEventCb, this);
     std::cout << "Session Start queue eventfd: " << sendQueue_.EventFd() << std::endl;
     sendQueue_.SetEvent(ev);
     AddRef(); // 将 Session 注册到 reactor 中去，引用计数加 1
