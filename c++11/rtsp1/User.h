@@ -2,7 +2,7 @@
 #include <string>
 #include <cstdint>
 
-namespace RTSP
+namespace Rtsp
 {
 class User
 {
