@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <functional>
 #include <string_view>
+#include <format>
 
 constexpr const unsigned short SERVER_PORT = 554;
 constexpr const size_t BUF_LEN = 1024;
@@ -61,7 +62,7 @@ struct BufSlice
     }
     bool operator==(const char *other)
     {
-        size_t otherLen = strnlen(other, strMaxLen) - 1;
+        size_t otherLen = strnlen(other, strMaxLen);
         if (len != otherLen) {
             return false;
         }
@@ -111,7 +112,7 @@ void DumpBufSlices(const std::vector<BufSlice> &slices)
 {
     std::cout << "====================================== begin" << std::endl;
     for (auto& slice : slices) {
-        std::cout << "[" << std::string(slice.buf, slice.len) << "] len = " << slice.len << std::endl;
+        std::cout << "[" << std::string_view(slice.buf, slice.len) << "] len = " << slice.len << std::endl;
     }
     std::cout << "====================================== end size = " << slices.size() << std::endl;
 }
@@ -138,6 +139,16 @@ std::vector<BufSlice> SplitString(const BufSlice &slice, const char splitter)
     return std::move(splitStrings);
 }
 
+void ResponseOptions(const std::string_view &version, const std::string_view &cseq, bool ret)
+{   
+    std::string response = std::format("{} 200 OK\r\n
+        CSeq: {}\r\n
+        Public: OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, ANNOUNCE, RECORD\r\n
+        Server: FTest\r\n
+        \r\n", version, cseq);
+
+}
+
 bool ProcessOptionInner(const BufSlice &slice, Rtsp::User &user)
 {
     auto slices = SplitString(slice, ' '); // 分割每一行字符串为以空格分割的多个字符串
@@ -151,31 +162,38 @@ bool ProcessOptionInner(const BufSlice &slice, Rtsp::User &user)
         }
         user.SetUrl(std::string(slices[1].buf, slices[1].len));
         user.SetVersion(std::string(slices[2].buf, slices[2].len));
-        std::cout << "Url: " << std::string(slices[1].buf, slices[1].len) << std::endl;
-        std::cout << "Version: " << std::string(slices[2].buf, slices[2].len) << std::endl;
+        std::cout << "Url: " << std::string_view(slices[1].buf, slices[1].len) << std::endl;
+        std::cout << "Version: " << std::string_view(slices[2].buf, slices[2].len) << std::endl;
     } else if (slices[0] == "Seq:") {
-        std::cout << "Seq: " << std::string(slices[1].buf, slices[1].len) << std::endl;
+        std::cout << "Seq: " << std::string_view(slices[1].buf, slices[1].len) << std::endl;
     } else if (slices[0] == "User-Agent:") {
-        std::cout << "User-Agent: " << std::string(slices[1].buf, slices[1].len) << std::endl;
+        std::cout << "User-Agent: " << std::string_view(slices[1].buf, slices[1].len) << std::endl;
     } else {
         return false;
     }
     return true;
 }
 
-bool ProcessOptions(const char *buf, size_t len, Rtsp::User &user)
+bool ProcessOptions(int client_fd, const char *buf, size_t len, Rtsp::User &user)
 {
+    bool processRet = true;
     while (len > 0) {
         BufSlice bufSlice = FindNextRN(buf, len); // 查找出以 \r\n 分割的字符串, 分割成了一行一行的字符串
         if (bufSlice.len == 0) {
             break;
         }
-        std::cout << "HandleProtocol: [" << std::string(bufSlice.buf, bufSlice.len) << "] len = " << bufSlice.len << std::endl;
-        ProcessOptionInner(bufSlice, user);
+        std::cout << "HandleProtocol: [" << std::string_view(bufSlice.buf, bufSlice.len) << "] len = " << bufSlice.len << std::endl;
+        if (!ProcessOptionInner(bufSlice, user)) {
+            std::cerr << "ProcessOptionInner bufSlice[" << std::string_view(bufSlice.buf, bufSlice.len) << std::endl;
+            processRet = false;
+            break;
+        }
 
         buf += bufSlice.len + 2; // +2 是跳过 \r\n
         len -= bufSlice.len + 2; // +2 是跳过 \r\n
     }
+
+    ResponseOptions(client_fd, processRet);
     std::cout << "------------------------------------------" << std::endl;
     return true;
 }
@@ -190,37 +208,11 @@ bool ProcessSetup(const char *buf, size_t len, Rtsp::User &user)
     return true;
 }
 
-// static std::unordered_map<BufSlice, std::function<void(const BufSlice &slice, User& user)>, BufSliceHash, BufSliceEqual> protocol_table;
 static std::unordered_map<std::string_view, std::function<bool(const char *buf, size_t len, Rtsp::User &user)>> g_rtspCmdTable = {
     {"OPTIONS", ProcessOptions},
     {"ANNOUNCE", ProcessAnnounce},
     {"SETUP", ProcessSetup},
 };
-
-struct StateMachineStep
-{
-    uint32_t step;
-    std::function<void(const BufSlice &slice, Rtsp::User &user)> process;
-};
-
-bool ProcessURL(const BufSlice &slice, Rtsp::User &user)
-{
-    return true;
-}
-
-bool ProcessVersion(const BufSlice &slice, Rtsp::User &user)
-{
-    return true;
-}
-
-static uint32_t request_line_step = REQUEST_LINE_METHOD;
-// static StateMachineStep request_line_machine[REQUEST_LINE_SEGMENT_NUM] = {
-//     {REQUEST_LINE_METHOD, ProcessMethod},
-//     {REQUEST_LINE_URL, ProcessURL},
-//     {REQUEST_LINE_VERSION, ProcessVersion}
-// };
-
-static uint32_t current_status = RTSP_PROCESS_REQUEST;
 
 BufSlice GetFirstSplitString(const char *buf, size_t len, const char splitter)
 {
@@ -274,11 +266,6 @@ bool HandleError(const BufSlice &slice)
     return true;
 }
 
-void ResetRtspStatus()
-{
-    current_status = RTSP_PROCESS_REQUEST;
-}
-
 static Rtsp::User g_user;
 
 // xxxx\r\n
@@ -287,7 +274,7 @@ static Rtsp::User g_user;
 /**
  * 将字符串切分成以 \r\n 分割的 buf 片段，放到 BufSlice 中
  */
-RtspErrorCode HandleRtspCmd(const char *buf, size_t len)
+RtspErrorCode HandleRtspCmd(int client_fd, const char *buf, size_t len)
 {
     // 获取请求行的 method
     BufSlice method = GetFirstSplitString(buf, len, ' ');
@@ -300,7 +287,7 @@ RtspErrorCode HandleRtspCmd(const char *buf, size_t len)
         return RtspErrorCode::RTSP_ERROR_INVALID_REQUEST;
     }
 
-    if (!it->second(buf, len, g_user)) {
+    if (!it->second(client_fd, buf, len, g_user)) {
         return  RtspErrorCode::RTSP_ERROR_INVALID_REQUEST;
     }
 
@@ -319,7 +306,7 @@ void Process(int client_fd)
             return;
         }
 
-        HandleRtspCmd(buf, n);
+        HandleRtspCmd(client_fd, buf, n);
     }
 }
 
