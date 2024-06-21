@@ -21,10 +21,30 @@ public:
         version_ = version;
     }
 
+    void SetCSeq(const std::string &cseq)
+    {
+        cseq_ = cseq;
+    }
+
+    std::string GetUrl() const
+    {
+        return url_;
+    }
+
+    std::string GetVersion() const
+    {
+        return version_;
+    }
+
+    std::string GetCSqe() const
+    {
+        return cseq_;
+    }
 
 private:
     std::string url_;
     std::string version_;
+    std::string cseq_;
     uint16_t rtpPort_;
     uint16_t rtcpPort_;
 };

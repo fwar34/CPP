@@ -9,7 +9,6 @@
 #include <unordered_map>
 #include <functional>
 #include <string_view>
-#include <format>
 
 constexpr const unsigned short SERVER_PORT = 554;
 constexpr const size_t BUF_LEN = 1024;
@@ -139,14 +138,27 @@ std::vector<BufSlice> SplitString(const BufSlice &slice, const char splitter)
     return std::move(splitStrings);
 }
 
-void ResponseOptions(const std::string_view &version, const std::string_view &cseq, bool ret)
+void ResponseOptions(int client_fd, Rtsp::User &user, bool processRet)
 {   
-    std::string response = std::format("{} 200 OK\r\n
-        CSeq: {}\r\n
-        Public: OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, ANNOUNCE, RECORD\r\n
-        Server: FTest\r\n
-        \r\n", version, cseq);
-
+    constexpr size_t RESPONSE_BUF_LEN = 1024;
+    char buf[RESPONSE_BUF_LEN] = {0};
+    if (processRet) {
+        std::sprintf(buf, "%s 200 OK\r\n"
+                          "CSeq: %s\r\n"
+                          "Public: OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, ANNOUNCE, RECORD\r\n"
+                          "Server: FTest\r\n"
+                          "\r\n",
+                     user.GetVersion(), user.GetCSeq());
+    } else {
+        std::sprintf(buf, "%s 201 Err\r\n"
+                          "CSeq: %s\r\n"
+                          "Server: FTest\r\n"
+                          "\r\n");
+    }
+    int ret = send(client_fd, buf, strlen(buf), 0);
+    if (ret == -1) {
+        std::cerr << "send options response failed, errno = " << errno << std::endl;
+    }
 }
 
 bool ProcessOptionInner(const BufSlice &slice, Rtsp::User &user)
@@ -164,8 +176,9 @@ bool ProcessOptionInner(const BufSlice &slice, Rtsp::User &user)
         user.SetVersion(std::string(slices[2].buf, slices[2].len));
         std::cout << "Url: " << std::string_view(slices[1].buf, slices[1].len) << std::endl;
         std::cout << "Version: " << std::string_view(slices[2].buf, slices[2].len) << std::endl;
-    } else if (slices[0] == "Seq:") {
-        std::cout << "Seq: " << std::string_view(slices[1].buf, slices[1].len) << std::endl;
+    } else if (slices[0] == "CSeq:") {
+        user.SetCSeq(std::string(slices[1].buf, slices[1].len));
+        std::cout << "CSeq: " << std::string_view(slices[1].buf, slices[1].len) << std::endl;
     } else if (slices[0] == "User-Agent:") {
         std::cout << "User-Agent: " << std::string_view(slices[1].buf, slices[1].len) << std::endl;
     } else {
@@ -193,7 +206,7 @@ bool ProcessOptions(int client_fd, const char *buf, size_t len, Rtsp::User &user
         len -= bufSlice.len + 2; // +2 是跳过 \r\n
     }
 
-    ResponseOptions(client_fd, processRet);
+    ResponseOptions(client_fd, user, processRet);
     std::cout << "------------------------------------------" << std::endl;
     return true;
 }
@@ -227,28 +240,6 @@ BufSlice GetFirstSplitString(const char *buf, size_t len, const char splitter)
     }
     slice.len = len;
     return slice;
-}
-
-
-void HandleRequestLineInner(const BufSlice &slice)
-{
-
-}
-
-
-bool HandleRequestLine(const BufSlice &slice)
-{
-    auto lines = SplitString(slice, ' ');
-    if (lines.empty() || lines.size() != REQUEST_LINE_SEGMENT_NUM) { // method url version
-        std::cerr << "SplitString for HandleRequestLine failed" << std::endl;
-        return false;
-    }
-
-    for (auto &line : lines) {
-
-    }
-
-    return true;
 }
 
 bool HandleRequestHeader(const BufSlice &slice)
