@@ -53,6 +53,8 @@ static void TestBitStruct()
 	printf("0x%02x, 0x%02x, 0x%02x, 0x%02x\n", array[0], array[1], array[2], array[3]); // windows 下面结果为 0x02, 0x29, 0x00, 0x00
 }
 
+extern void TestAdtsHeader();
+
 int main()
 {
 	std::cout << "Hello CMake." << std::endl;
@@ -61,6 +63,7 @@ int main()
 	std::cout << foo.a << std::endl;
 	TestFoo();
 	TestBitStruct();
+	TestAdtsHeader();
 	
 	return 0;
 }

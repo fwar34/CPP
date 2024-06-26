@@ -12,7 +12,7 @@ endif()
 project ("bittest")
 
 # 将源代码添加到此项目的可执行文件。
-add_executable (bittest "bittest.cpp" "bittest.h")
+add_executable (bittest "bittest.cpp" "bittest.h" "adts.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET bittest PROPERTY CXX_STANDARD 20)
