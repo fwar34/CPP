@@ -157,6 +157,7 @@ int main()
 	TestST1();
 	TestKuaUnit();
 	TestKuaUint2();
+	TestKuaUnit3();
 	
 	return 0;
 }
