@@ -126,6 +126,23 @@ void TestKuaUint2()
 	testUint.c = 0x987;
 }
 
+void TestKuaUnit3()
+{
+#pragma pack(1)
+	struct TestUint
+	{
+		uint8_t a : 5;
+		uint16_t b : 10;
+		uint16_t c : 10;
+	} testUnit = { 0 };
+#pragma pack()
+	std::cout << "TestKuaUint3 " << sizeof(testUnit) << std::endl;
+
+	testUnit.a = 0x7;
+	testUnit.b = 0x643;
+	testUnit.c = 0x987;
+}
+
 extern void TestAdtsHeader();
 
 int main()
