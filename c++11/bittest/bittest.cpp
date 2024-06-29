@@ -53,6 +53,33 @@ static void TestBitStruct()
 	printf("0x%02x, 0x%02x, 0x%02x, 0x%02x\n", array[0], array[1], array[2], array[3]); // windows 下面结果为 0x02, 0x29, 0x00, 0x00
 }
 
+#pragma pack(1)
+struct st1
+{
+    uint8_t  a1 : 2;
+    uint8_t  a2 : 6;
+    uint16_t b1 : 3;
+    uint16_t b2 : 4;
+    uint16_t b3 : 5;
+    uint16_t b4 : 4;
+};
+#pragma pack()
+ 
+void TestST1()
+{
+    struct st1 data = {
+        .a1 = 0x1,
+        .a2 = 0x3,
+        .b1 = 0x4,
+        .b2 = 0x8,
+        .b3 = 0xb,
+        .b4 = 0x3
+    };
+	uint8_t* array = (uint8_t*)&data;
+	std::cout << sizeof(data) << std::endl;
+	printf("0x%02x, 0x%02x, 0x%02x, 0x%02x\n", array[0], array[1], array[2], array[3]);
+}
+
 extern void TestAdtsHeader();
 
 int main()
@@ -64,6 +91,7 @@ int main()
 	TestFoo();
 	TestBitStruct();
 	TestAdtsHeader();
+	TestST1();
 	
 	return 0;
 }
