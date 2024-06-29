@@ -78,6 +78,34 @@ void TestST1()
 	uint8_t* array = (uint8_t*)&data;
 	std::cout << sizeof(data) << std::endl;
 	printf("0x%02x, 0x%02x, 0x%02x, 0x%02x\n", array[0], array[1], array[2], array[3]);
+
+	struct st1 data2 = { 0 };
+	data2.a1 = 0x1;
+	data2.a2 = 0x3;
+	data2.b1 = 0x4;
+	data2.b2 = 0x8;
+	data2.b3 = 0xb;
+	data2.b4 = 0x3;
+}
+
+void TestKuaUnit()
+{
+#pragma pack(1)
+	struct TestUnit
+	{
+		uint8_t a : 5;
+		uint8_t b : 5;
+		uint8_t c : 3;
+		uint8_t d : 7;
+	} testUnit = { 0 };
+#pragma pack()
+
+	std::cout << "TestKuaUnit " << sizeof(testUnit) << std::endl;
+
+	testUnit.a = 0x3;
+	testUnit.b = 0x4;
+	testUnit.c = 0x6;
+	testUnit.d = 0x8;
 }
 
 extern void TestAdtsHeader();
@@ -92,6 +120,7 @@ int main()
 	TestBitStruct();
 	TestAdtsHeader();
 	TestST1();
+	TestKuaUnit();
 	
 	return 0;
 }
