@@ -122,8 +122,8 @@ void TestKuaUint2()
 	std::cout << "TestKuaUint2 " << sizeof(testUint) << std::endl;
 
 	testUint.a = 0x7;
-	testUint.b = 0x6;
-	testUint.c = 0x9;
+	testUint.b = 0x643;
+	testUint.c = 0x987;
 }
 
 extern void TestAdtsHeader();
