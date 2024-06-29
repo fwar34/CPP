@@ -90,6 +90,7 @@ void TestST1()
 
 void TestKuaUnit()
 {
+	// 位域跨越了位域定义的单元（uint8）
 #pragma pack(1)
 	struct TestUnit
 	{
@@ -108,6 +109,23 @@ void TestKuaUnit()
 	testUnit.d = 0x8;
 }
 
+void TestKuaUint2()
+{
+#pragma pack(1)
+	struct TestUint
+	{
+		uint16_t a : 4;
+		uint16_t b : 14;
+		uint16_t c : 15;
+	}testUint = { 0 };
+#pragma pack()
+	std::cout << "TestKuaUint2 " << sizeof(testUint) << std::endl;
+
+	testUint.a = 0x7;
+	testUint.b = 0x6;
+	testUint.c = 0x9;
+}
+
 extern void TestAdtsHeader();
 
 int main()
@@ -121,6 +139,7 @@ int main()
 	TestAdtsHeader();
 	TestST1();
 	TestKuaUnit();
+	TestKuaUint2();
 	
 	return 0;
 }
