@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -148,14 +149,14 @@ void ResponseOptions(int client_fd, Rtsp::User &user, bool processRet)
                           "Public: OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, ANNOUNCE, RECORD\r\n"
                           "Server: FTest\r\n"
                           "\r\n",
-                     user.GetVersion(), user.GetCSeq());
+                     user.GetVersion().c_str(), user.GetCSeq().c_str());
     } else {
         std::sprintf(buf, "%s 201 Err\r\n"
                           "CSeq: %s\r\n"
                           "Server: FTest\r\n"
-                          "\r\n");
+                          "\r\n", user.GetVersion().c_str(), user.GetCSeq().c_str());
     }
-    int ret = send(client_fd, buf, strlen(buf), 0);
+    ssize_t ret = send(client_fd, buf, strlen(buf), 0);
     if (ret == -1) {
         std::cerr << "send options response failed, errno = " << errno << std::endl;
     }
@@ -211,17 +212,17 @@ bool ProcessOptions(int client_fd, const char *buf, size_t len, Rtsp::User &user
     return true;
 }
 
-bool ProcessAnnounce(const char *buf, size_t len, Rtsp::User &user)
+bool ProcessAnnounce(int client_fd, const char *buf, size_t len, Rtsp::User &user)
 {
     return true;
 }
 
-bool ProcessSetup(const char *buf, size_t len, Rtsp::User &user)
+bool ProcessSetup(int client_fd, const char *buf, size_t len, Rtsp::User &user)
 {
     return true;
 }
 
-static std::unordered_map<std::string_view, std::function<bool(const char *buf, size_t len, Rtsp::User &user)>> g_rtspCmdTable = {
+static std::unordered_map<std::string_view, std::function<bool(int client_fd, const char *buf, size_t len, Rtsp::User &user)>> g_rtspCmdTable = {
     {"OPTIONS", ProcessOptions},
     {"ANNOUNCE", ProcessAnnounce},
     {"SETUP", ProcessSetup},
@@ -291,9 +292,13 @@ void Process(int client_fd)
     char buf[BUF_LEN] = {0};
     for (;;) {
         memset(buf, 0, BUF_LEN);
-        size_t n = recv(client_fd, buf, BUF_LEN, 0);
+        ssize_t n = recv(client_fd, buf, BUF_LEN, 0);
         if (n == -1) {
             std::cerr << "recv failed, errno = " << errno << std::endl;
+            return;
+        } else if (n == 0) {
+            std::cout << "peer connect close, close client_fd" << std::endl;
+            close(client_fd);
             return;
         }
 
@@ -341,6 +346,7 @@ int main(int argc, char *argv[])
     }
 
     Process(client_fd);
+    std::cout << "main exit..." << std::endl;
 
     return 0;
 }

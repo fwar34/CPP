@@ -36,7 +36,7 @@ public:
         return version_;
     }
 
-    std::string GetCSqe() const
+    std::string GetCSeq() const
     {
         return cseq_;
     }

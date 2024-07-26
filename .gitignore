@@ -15,7 +15,6 @@ a.out
 TAGS
 qr_*.*
 **/build/*
-.vscode/
 *.exe
 .vs/
 out/
