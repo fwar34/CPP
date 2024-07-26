@@ -25,6 +25,7 @@ struct Foo
 
 void TestFoo()
 {
+	// 在vs和gcc内存中查看跨字节的位域，并且看下vs和gcc是否位域都压缩了么
 	Foo foo2 = { 0 };
 	std::cout << "sizeof(foo2) = " << sizeof(foo2) << std::endl; // vs 中9字节
 	foo2.a = 0xFF;
@@ -44,6 +45,7 @@ struct BitStruct
 
 static void TestBitStruct()
 {
+	// 在vs和gcc内存中查看对应的位域，并且查看输出
 	char array[4] = { 0 };
 	BitStruct* bitStruct = (BitStruct*)array;
 	bitStruct->a = 2;
@@ -111,6 +113,7 @@ void TestKuaUnit()
 
 void TestKuaUint2()
 {
+	// 位域跨越了位域定义的单元（uint16_t)
 #pragma pack(1)
 	struct TestUint
 	{
@@ -143,6 +146,45 @@ void TestKuaUnit3()
 	testUnit.c = 0x987;
 }
 
+void Test3()
+{
+#pragma pack(1)
+	struct Pack
+	{
+		uint32_t a;
+		uint8_t c1;
+		uint8_t c2;
+		uint8_t c3;
+		uint8_t c4;
+	} pack = { 0 };
+#pragma pack()
+	pack.a = 0x12;
+	pack.c1 = 5;
+	pack.c2 = 6;
+	pack.c3 = 7;
+	pack.c4 = 8;
+	uint32_t *pc = (uint32_t*)&pack + 1;
+	// 清零c2
+	*pc = *pc & 0xFFFF00FF;
+
+	std::cout << "Test3: " << std::endl;
+	std::cout << pack.a << std::endl;
+	printf("%u\n", pack.c1);
+	printf("%u\n", pack.c2);
+	printf("%u\n", pack.c3);
+	printf("%u\n", pack.c4);
+
+	uint16_t* p16 = (uint16_t*)&(pack.c1);
+	printf("%u\n", *p16);
+	if (*p16 = 0x600) {
+		std::cout << "equal" << std::endl;
+	}
+
+
+
+	// std::cout << (*pc) & 0xFFFF00FF;
+}
+
 extern void TestAdtsHeader();
 
 int main()
@@ -158,6 +200,7 @@ int main()
 	TestKuaUnit();
 	TestKuaUint2();
 	TestKuaUnit3();
+	Test3();
 	
 	return 0;
 }
