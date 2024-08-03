@@ -14,7 +14,7 @@ public:
     {
         HTTP_LINE_OK,   // 接收到\r\n分割的完整一行
         HTTP_LINE_OPEN, // 未接收到\r\n分割的完整一行
-        HTTP_LINE_BAD   // 接收出错
+        HTTP_LINE_ERROR   // 接收出错
     };
 
     // 主状态机
@@ -27,13 +27,14 @@ public:
 
     enum class HttpParseCode
     {
-        HTTP_PARSE_CODE_ERROR,
-        HTTP_PARSE_CODE_GET_REQUEST,
+        HTTP_PARSE_CODE_ERROR,         // 出错
+        HTTP_PARSE_CODE_GET_REQUEST,   // 获取到了完整的http请求
+        HTTP_PARSE_CODE_OPEN,          // 没有接收到完整的http请求
     };
 
     bool RegisterCallback(HttpRequestState state, CallBack callback);
 
-    std::optional<HttpRequest> ParseRequest(size_t recvLen);
+    std::pair<HttpParseCode, std::optional<HttpRequest>> ParseRequest(size_t recvLen);
 
     inline size_t GetWriteIndex()
     {

@@ -7,7 +7,6 @@
 #include <unistd.h>
 
 constexpr const uint32_t BACKLOG = 1024;
-constexpr const uint32_t RECV_MAX_LEN = 4096;
 
 void HandleHttpRequestLine(const std::string& lineContent)
 {
@@ -27,6 +26,8 @@ void HandleHttpRequestContent(const std::string& lineContent)
 int main(int argc, char* argv[])
 {
     Log::InitLog(spdlog::level::info);
+
+    Log::Logger()->info("Server start...");
 
     uint16_t port = 10086;
     std::string ip = "0.0.0.0";
@@ -91,13 +92,21 @@ int main(int argc, char* argv[])
         }
 
         auto ret = httpParser.ParseRequest(recvLen);
-        if (!ret) {
+        if (ret.first == HttpParser::HttpParseCode::HTTP_PARSE_CODE_OPEN) {
             Log::Logger()->error("Recv buffer is full, clientFd[{}], continue recv", clientFd);
             continue;
+        } else if (ret.first == HttpParser::HttpParseCode::HTTP_PARSE_CODE_ERROR) {
+            Log::Logger()->error("Parse http error, close client fd {}", clientFd);
+            close(clientFd);
+            break;
         }
 
-        // TODO
+        auto request = *ret.second;
+        Log::Logger()->info("Get request:[{}]", request.ToString());
+        // 获取到一个Http请求
     }
+
+    Log::Logger()->info("Server exit...");
 
     return 0;
 }
