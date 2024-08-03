@@ -30,6 +30,7 @@ std::optional<HttpRequest> HttpParser::ParseRequest(size_t recvLen)
         Execute();
     }
 
+    return std::optional<HttpRequest>();
 }
 
 HttpParser::HttpLineState HttpParser::ParseHttpLine()

@@ -20,5 +20,7 @@ private:
 // 内联函数放到头文件定义，在其他文件包含的时候可以直接替换，否则可能导致链接问题
 inline void Log::InitLog(spdlog::level::level_enum lvl)
 {
-    logger_->set_level(lvl);
+    // logger_->set_level(lvl);
+    logger_->info("set log level {}", lvl);
+    logger_->flush_on(lvl);
 }

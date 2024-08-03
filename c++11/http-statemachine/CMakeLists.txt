@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(http-statemachine)
 
+set(CMAKE_BUILD_TYPE Debug)
 set(SRC HttpParser.h Log.h HttpParser.cpp Log.cpp)
 
 add_library(${PROJECT_NAME} SHARED ${SRC})
