@@ -1,46 +1,60 @@
 #include "HttpParser.h"
+#include "Common.h"
+#include <iostream>
 
-int HttpParser::ParseContent(size_t recvLen)
+bool HttpParser::RegisterCallback(HttpRequestState state, CallBack callback)
 {
-    for (;;) {
-        if (!ParseHttpLine(recvLen)) {
-            // 本次 recv 消息处理完成
-            break;
-        }
-
-        switch (httpLineState_)
-        {
-        case HTTP_LINE_OK:
-            break;
-        case HTTP_LINE_OPEN:
-            break;
-        case HTTP_LINE_BAD:
-            break;
-        default:
-        }
+    auto it = callbacks_.find(state);
+    if (it != callbacks_.end()) {
+        return false;
     }
+
+    callbacks_[state] = callback;
+    return true;
 }
 
-bool HttpParser::ParseHttpLine(size_t recvLen)
+std::optional<HttpRequest> HttpParser::ParseRequest(size_t recvLen)
 {
-    // if (writeIndex_ + recvLen == BUF_LEN) { // 接收缓冲区满
-    //     if (buf[writeIndex_ + recvLen - 1] != '\n') { // 满了的时候也没有解析出完整的一个http行，返回错误
-    //         Reset();
-    //         return HTTP_LINE_BAD;
-    //     }
-    // }
+    if (writeIndex_ == BUF_LEN) {
+        // 接收buf_已经满了，直接Reset
+        Reset();
+        Common::Logger()->info("Client recv buffer is full, reset it");
+        return std::optional<HttpRequest>{};
+    }
 
-    while (httpLineState_ != HTTP_LINE_OK && ) {
-        // 这里不用判断 writeIndex_ + recvLen 会缓冲区溢出，因为外层
-        // recv 传递的 len 参数是 BUF_LEN - writeIndex_，即剩余可用缓冲区长度
-        if (buf_[writeIndex_ + recvLen] == '\r') {
+    // 这里不用判断 writeIndex_ + recvLen 会缓冲区溢出，因为外层
+    // recv 传递的 len 参数是 BUF_LEN - writeIndex_，即剩余可用缓冲区长度
+    writeIndex_ += recvLen;
 
+    while (ParseHttpLine() == HTTP_LINE_OK) { // 收到了\r\n分割的完整一行
+        Execute();
+    }
+
+}
+
+HttpLineState HttpParser::ParseHttpLine(std::string& lineContent)
+{
+    for (; readIndex_ < writeIndex_; ++readIndex_) {
+        if (buf_[readIndex_] == '\r' && readIndex_ + 1 < writeIndex_ && buf_[readIndex_ + 1] == '\n') {
+            lineContent.assign(buf_ + readIndex_, writeIndex_ - readIndex_);
         }
     }
-    return HttpLineState();
+    return HTTP_LINE_OPEN;
 }
 
 void HttpParser::Reset()
 {
+    readIndex_ = 0;
     writeIndex_ = 0;
+}
+
+void HttpParser::Execute()
+{
+    auto it = callbacks_.find(httpRequestState_);
+    if (it == callbacks_.end()) {
+        Common::Logger()->error("Can't find HttpRequestState: {} in callbacks!", httpRequestState_);
+        return;
+    }
+
+    it->second(lineContent_);
 }
