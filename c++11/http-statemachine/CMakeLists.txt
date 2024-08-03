@@ -15,5 +15,5 @@ endif()
 # PUBLIC属性指定了${PROJECT_NAME}所链接的库暴露出去了，其他引用${PROJECT_NAME}的目标则继承此链接库（参考类的PUBLIC作用域）
 target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog)
 
-## 测试用
+## 测试
 add_subdirectory(test)
