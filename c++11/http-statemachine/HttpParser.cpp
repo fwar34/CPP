@@ -1,5 +1,5 @@
+#include "Log.h"
 #include "HttpParser.h"
-#include "Common.h"
 #include <iostream>
 
 bool HttpParser::RegisterCallback(HttpRequestState state, CallBack callback)
@@ -18,7 +18,7 @@ std::optional<HttpRequest> HttpParser::ParseRequest(size_t recvLen)
     if (writeIndex_ == BUF_LEN) {
         // 接收buf_已经满了，直接Reset
         Reset();
-        Common::Logger()->info("Client recv buffer is full, reset it");
+        Log::Logger()->info("Client recv buffer is full, reset it!");
         return std::optional<HttpRequest>{};
     }
 
@@ -26,20 +26,20 @@ std::optional<HttpRequest> HttpParser::ParseRequest(size_t recvLen)
     // recv 传递的 len 参数是 BUF_LEN - writeIndex_，即剩余可用缓冲区长度
     writeIndex_ += recvLen;
 
-    while (ParseHttpLine() == HTTP_LINE_OK) { // 收到了\r\n分割的完整一行
+    while (ParseHttpLine() == HttpLineState::HTTP_LINE_OK) { // 收到了\r\n分割的完整一行
         Execute();
     }
 
 }
 
-HttpLineState HttpParser::ParseHttpLine(std::string& lineContent)
+HttpParser::HttpLineState HttpParser::ParseHttpLine()
 {
     for (; readIndex_ < writeIndex_; ++readIndex_) {
         if (buf_[readIndex_] == '\r' && readIndex_ + 1 < writeIndex_ && buf_[readIndex_ + 1] == '\n') {
-            lineContent.assign(buf_ + readIndex_, writeIndex_ - readIndex_);
+            lineContent_.assign(buf_ + readIndex_, writeIndex_ - readIndex_);
         }
     }
-    return HTTP_LINE_OPEN;
+    return HttpLineState::HTTP_LINE_OPEN;
 }
 
 void HttpParser::Reset()
@@ -52,7 +52,7 @@ void HttpParser::Execute()
 {
     auto it = callbacks_.find(httpRequestState_);
     if (it == callbacks_.end()) {
-        Common::Logger()->error("Can't find HttpRequestState: {} in callbacks!", httpRequestState_);
+        // Log::Logger()->error("Can't find HttpRequestState: {} in callbacks!", httpRequestState_);
         return;
     }
 

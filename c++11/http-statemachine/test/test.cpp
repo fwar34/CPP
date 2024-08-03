@@ -1,4 +1,4 @@
-#include "Common.h"
+#include "Log.h"
 #include "HttpParser.h"
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -26,7 +26,7 @@ void HandleHttpRequestContent(const std::string& lineContent)
 
 int main(int argc, char* argv[])
 {
-    Common::InitLog(spdlog::level::info, "test.log");
+    Log::InitLog(spdlog::level::info);
 
     uint16_t port = 10086;
     std::string ip = "0.0.0.0";
@@ -39,14 +39,14 @@ int main(int argc, char* argv[])
 
     int listenFd = socket(AF_INET, SOCK_STREAM, 0);
     if (listenFd == -1) {
-        Common::Logger()->error("Create accept socket failed, errno = {}", errno);
+        Log::Logger()->error("Create accept socket failed, errno = {}", errno);
         return -1;
     }
 
     int opt = 1;
     int ret = setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt));
     if (ret == -1) {
-        Common::Logger()->error("setsockopt failed, errno = {}", errno);
+        Log::Logger()->error("setsockopt failed, errno = {}", errno);
         return -1;
     }
 
@@ -56,13 +56,13 @@ int main(int argc, char* argv[])
     address.sin_addr.s_addr = inet_addr(ip.c_str());
     ret = bind(listenFd, (struct sockaddr*)&address, sizeof(address));
     if (ret == -1) {
-        Common::Logger()->error("setsockopt failed, errno = {}", errno);
+        Log::Logger()->error("setsockopt failed, errno = {}", errno);
         return -1;
     }
 
     ret = listen(listenFd, BACKLOG);
     if (ret == -1) {
-        Common::Logger()->error("Listen failed, errno = {}", errno);
+        Log::Logger()->error("Listen failed, errno = {}", errno);
         return -1;
     }
 
@@ -70,8 +70,8 @@ int main(int argc, char* argv[])
     socklen_t clientAddrLen = sizeof(clientAddr);
     int clientFd = accept(listenFd, (struct sockaddr*)&clientAddr, &clientAddrLen);
     if (clientFd == -1) {
-        Common::Logger()->error("Accept client failed, errno = {}", errno);
-        continue;
+        Log::Logger()->error("Accept client failed, errno = {}", errno);
+        return -1;
     }
 
     HttpParser httpParser;
@@ -82,17 +82,17 @@ int main(int argc, char* argv[])
     while (true) {
         ssize_t recvLen = recv(clientFd, httpParser.GetWritePtr(), httpParser.GetBufRemainSize(), 0);
         if (recvLen == -1) {
-            Common::Logger()->error("Recv clientFd failed, errno = {}", errno);
+            Log::Logger()->error("Recv clientFd failed, errno = {}", errno);
             continue;
         } else if (recvLen == 0) {
-            Common::Logger()->info("Recv clientFd[{}] close", clientFd);
+            Log::Logger()->info("Recv clientFd[{}] close", clientFd);
             close(clientFd);
             break;
         }
 
         auto ret = httpParser.ParseRequest(recvLen);
         if (!ret) {
-            Common::Logger()->error("Recv buffer is full, clientFd[{}], continue recv", clientFd);
+            Log::Logger()->error("Recv buffer is full, clientFd[{}], continue recv", clientFd);
             continue;
         }
 

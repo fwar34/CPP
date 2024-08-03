@@ -76,7 +76,7 @@ public:
     }
 
 private:
-    HttpLineState ParseHttpLine(std::string& lineContent);
+    HttpLineState ParseHttpLine();
     void Reset();
     void Execute();
 
