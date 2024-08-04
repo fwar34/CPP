@@ -14,7 +14,7 @@ bool HttpParser::RegisterCallback(HttpRequestState state, CallBack callback)
     return true;
 }
 
-std::pair<HttpParseCode, std::optional<HttpRequest>> HttpParser::ParseRequest(size_t recvLen)
+std::pair<HttpParser::HttpParseCode, std::optional<HttpRequest>> HttpParser::ParseRequest(size_t recvLen)
 {
     if (writeIndex_ == BUF_LEN) {
         // 接收buf_已经满了，直接Reset
@@ -46,7 +46,7 @@ std::pair<HttpParseCode, std::optional<HttpRequest>> HttpParser::ParseRequest(si
         default: // HTTP_LINE_OPEN
             break;
         }
-    } while (lineState == HttpLineState::HTTP_LINE_OK)
+    } while (lineState == HttpLineState::HTTP_LINE_OK);
 
     // 处理完本次接收的数据，将数据移动到buf_头部
     if (readIndex_ != 0 && writeIndex_ > readIndex_) {
@@ -61,7 +61,7 @@ std::pair<HttpParseCode, std::optional<HttpRequest>> HttpParser::ParseRequest(si
 HttpParser::HttpLineState HttpParser::ParseHttpLine()
 {
     for (; readIndex_ < writeIndex_; ++readIndex_) {
-        if (buf[readIndex_] == '\r') {
+        if (buf_[readIndex_] == '\r') {
             if (readIndex_ + 1 == writeIndex_) { // 接收缓冲区已经满了，直接关闭客户端连接
                 return HttpLineState::HTTP_LINE_ERROR;
             } else {
@@ -79,7 +79,7 @@ void HttpParser::Reset()
     writeIndex_ = 0;
 }
 
- HttpParser::Execute()
+void HttpParser::Execute()
 {
     auto it = callbacks_.find(httpRequestState_);
     if (it == callbacks_.end()) {

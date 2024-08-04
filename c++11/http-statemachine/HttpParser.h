@@ -34,7 +34,7 @@ public:
 
     bool RegisterCallback(HttpRequestState state, CallBack callback);
 
-    std::pair<HttpParseCode, std::optional<HttpRequest>> ParseRequest(size_t recvLen);
+    std::pair<HttpParser::HttpParseCode, std::optional<HttpRequest>> ParseRequest(size_t recvLen);
 
     inline size_t GetWriteIndex()
     {
