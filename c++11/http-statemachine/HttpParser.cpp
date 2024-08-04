@@ -17,9 +17,9 @@ bool HttpParser::RegisterCallback(HttpRequestState state, CallBack callback)
 std::pair<HttpParser::HttpParseCode, std::optional<HttpRequest>> HttpParser::ParseRequest(size_t recvLen)
 {
     if (writeIndex_ == BUF_LEN) {
-        // 接收buf_已经满了，直接Reset
-        Reset();
-        Log::Logger()->info("Client recv buffer is full, reset it!");
+        // 接收buf_已经满了，直接Clear
+        Clear();
+        Log::Logger()->info("Client recv buffer is full, clear it!");
         return std::pair{HttpParseCode::HTTP_PARSE_CODE_ERROR, std::optional<HttpRequest>{}};
     }
 
@@ -37,13 +37,16 @@ std::pair<HttpParser::HttpParseCode, std::optional<HttpRequest>> HttpParser::Par
         lineState = ParseHttpLine();
         switch (lineState)
         {
-        case HttpLineState::HTTP_LINE_OK:
-            Execute();
+        case HttpLineState::HTTP_LINE_OK: // 收到了\r\n分割的完整一行
+            auto ret = Execute();
+            if (ret) {
+                return GenRequest();
+            }
             break;
-        case HttpLineState::HTTP_LINE_ERROR:
-            Reset();
+        case HttpLineState::HTTP_LINE_ERROR: // 解析出错
+            Clear();
             return std::pair{HttpParseCode::HTTP_PARSE_CODE_ERROR, std::optional<HttpRequest>()};
-        default: // HTTP_LINE_OPEN
+        default: // HTTP_LINE_OPEN, 未收到\r\n分割的完整一行，继续接收
             break;
         }
     } while (lineState == HttpLineState::HTTP_LINE_OK);
@@ -73,13 +76,13 @@ HttpParser::HttpLineState HttpParser::ParseHttpLine()
     return HttpLineState::HTTP_LINE_OPEN;
 }
 
-void HttpParser::Reset()
+void HttpParser::Clear()
 {
     readIndex_ = 0;
     writeIndex_ = 0;
 }
 
-void HttpParser::Execute()
+std::optional<HttpRequest> HttpParser::Execute()
 {
     auto it = callbacks_.find(httpRequestState_);
     if (it == callbacks_.end()) {

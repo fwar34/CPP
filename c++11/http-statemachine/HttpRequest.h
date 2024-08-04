@@ -16,6 +16,14 @@ struct HttpRequest
     RequestLine requestLine;
     std::unordered_map<std::string, std::variant<int, std::string>> headerValues;
     std::string content;
+    void Clear()
+    {
+        requestLine.method.clear();
+        requestLine.url.clear();
+        requestLine.version.clear();
+        headerValues.clear();
+        content.clear();
+    }
     std::string ToString() const
     {
         std::ostringstream oss;

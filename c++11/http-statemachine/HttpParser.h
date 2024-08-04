@@ -78,8 +78,8 @@ public:
 
 private:
     HttpLineState ParseHttpLine();
-    void Reset();
-    void Execute();
+    void Clear();
+    std::optional<HttpRequest> Execute();
 
     std::unordered_map<HttpRequestState, CallBack> callbacks_;
     HttpRequestState httpRequestState_ = HttpRequestState::HTTP_REQUEST_LINE; // http 处理状态，初始先处理请求行

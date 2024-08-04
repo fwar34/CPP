@@ -8,8 +8,12 @@
 
 constexpr const uint32_t BACKLOG = 1024;
 
+static HttpRequest request;
+
 void HandleHttpRequestLine(const std::string& lineContent)
 {
+    // 每次处理一个新的请求前，先清理上次的请求内容
+    request.Clear();
 
 }
 
@@ -19,6 +23,11 @@ void HandleHttpRequestHeader(const std::string& lineContent)
 }
 
 void HandleHttpRequestContent(const std::string& lineContent)
+{
+
+}
+
+void ProcessHttpRequest(const HttpRequest& request)
 {
 
 }
@@ -104,6 +113,7 @@ int main(int argc, char* argv[])
         auto request = *ret.second;
         Log::Logger()->info("Get request:[{}]", request.ToString());
         // 获取到一个Http请求
+        ProcessHttpRequest(request);
     }
 
     Log::Logger()->info("Server exit...");
