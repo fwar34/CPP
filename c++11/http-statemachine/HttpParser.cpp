@@ -38,10 +38,10 @@ std::pair<HttpParser::HttpParseCode, std::optional<HttpRequest>> HttpParser::Par
         switch (lineState)
         {
         case HttpLineState::HTTP_LINE_OK: // 收到了\r\n分割的完整一行
-            auto ret = Execute();
-            if (ret) {
-                return GenRequest();
-            }
+            // auto ret = Execute();
+            // if (ret) {
+            //     return GenRequest();
+            // }
             break;
         case HttpLineState::HTTP_LINE_ERROR: // 解析出错
             Clear();
@@ -87,7 +87,7 @@ std::optional<HttpRequest> HttpParser::Execute()
     auto it = callbacks_.find(httpRequestState_);
     if (it == callbacks_.end()) {
         // Log::Logger()->error("Can't find HttpRequestState: {} in callbacks!", httpRequestState_);
-        return;
+        //return;
     }
 
     it->second(lineContent_);

@@ -8,12 +8,47 @@
 
 constexpr const uint32_t BACKLOG = 1024;
 
-static HttpRequest request;
+static HttpRequest g_request;
+
+// 将origin字符串分割成以splitter子串为分隔符的多个字符串
+std::vector<std::string> SplitString(const std::string& origin, const std::string& splitter)
+
+{
+    size_t left = 0;
+    size_t right = 0;
+    std::vector<std::string> retVec;
+    size_t j = 0;
+    for (size_t i = 0; i < origin.size() && left < origin.size(); ++i) {
+        if (origin[i] == splitter[j]) {
+            if (j == 0) { // 第一次和子串头字母相等则更新right
+                right = i;
+            }
+
+            if (j == splitter.size() - 1) { // 查询到一个splitter分割的子串，将[left, right)对应的子串返回，更新j、left、right
+                if (i + 1 != splitter.size() && right > left) { // 排除origin开头就是一个splitter子串，同时满足right > left的情况
+                    retVec.push_back(origin.substr(left, right - left));
+                }
+                j = 0;
+                left = right + splitter.size();
+                right = right + splitter.size();
+            } else {
+                j++;
+            }
+        } else {
+            if (j != 0) { // 如果splitter不是完全相等则重新从当前位置i比较
+                j = 0;
+                i--;
+            }
+        }
+    }
+
+    return retVec;
+}
 
 void HandleHttpRequestLine(const std::string& lineContent)
 {
     // 每次处理一个新的请求前，先清理上次的请求内容
-    request.Clear();
+    g_request.Clear();
 
 }
 
@@ -30,6 +65,28 @@ void HandleHttpRequestContent(const std::string& lineContent)
 void ProcessHttpRequest(const HttpRequest& request)
 {
 
+}
+
+void TestSplitString()
+{
+    auto strs = SplitString("abcxyefgxy", "xy");
+    for (auto str : strs) {
+        std::cout << str << std::endl;
+    }
+    std::cout << "-----------------------------------------" << std::endl;
+
+    strs.clear();
+    strs = SplitString("xyabcxxyefxxy", "xy");
+    for (auto str : strs) {
+        std::cout << str << std::endl;
+    }
+    std::cout << "-----------------------------------------" << std::endl;
+
+    strs.clear();
+    strs = SplitString("3xyabcxxyxyefxyxy", "xy");
+    for (auto str : strs) {
+        std::cout << str << std::endl;
+    }
 }
 
 int main(int argc, char* argv[])
@@ -59,6 +116,8 @@ int main(int argc, char* argv[])
         Log::Logger()->error("setsockopt failed, errno = {}", errno);
         return -1;
     }
+
+    TestSplitString();
 
     struct sockaddr_in address = {0};
     address.sin_family = AF_INET;
