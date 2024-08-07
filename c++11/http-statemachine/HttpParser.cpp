@@ -63,12 +63,14 @@ std::pair<HttpParser::HttpParseCode, std::optional<HttpRequest>> HttpParser::Par
 
 HttpParser::HttpLineState HttpParser::ParseHttpLine()
 {
-    for (; readIndex_ < writeIndex_; ++readIndex_) {
-        if (buf_[readIndex_] == '\r') {
-            if (readIndex_ + 1 == writeIndex_) { // 接收缓冲区已经满了，直接关闭客户端连接
+    size_t readIndexOrigin = readIndex_;
+    for (; readIndexOrigin < writeIndex_; ++readIndex_) {
+        if (buf_[readIndexOrigin] == '\r') {
+            if (readIndexOrigin + 1 >= writeIndex_) { // 接收缓冲区已经满了，直接关闭客户端连接
                 return HttpLineState::HTTP_LINE_ERROR;
-            } else {
-                lineContent_.assign(buf_ + readIndex_, writeIndex_ - readIndex_);
+            } else if (buf_[readIndex_ + 1] == '\n') {
+                lineContent_.assign(buf_ + readIndexOrigin, writeIndex_ - readIndexOrigin);
+                readIndex_ = readIndexOrigin + 2; // 读取一个完整的行后更新readIndex索引
                 return HttpLineState::HTTP_LINE_OK;
             }
         }

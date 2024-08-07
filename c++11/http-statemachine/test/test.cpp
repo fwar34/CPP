@@ -53,7 +53,11 @@ void HandleHttpRequestLine(const std::string& lineContent)
 {
     // 每次处理一个新的请求前，先清理上次的请求内容
     g_request.Clear();
-
+    auto fields = SplitString(lineContent, " ");
+    Log::Logger()->info("request lineContent[{}]", lineContent);
+    for (const auto& field : fields) {
+        Log::Logger()->info("request line: [{}] [{}] [{}]", lineContent, field);
+    }
 }
 
 void HandleHttpRequestHeader(const std::string& lineContent)
@@ -168,6 +172,7 @@ int main(int argc, char* argv[])
         Log::Logger()->error("Accept client failed, errno = {}", errno);
         return -1;
     }
+    Log::Logger()->info("Accept a client fd:{}", clientFd);
 
     HttpParser httpParser;
     httpParser.RegisterCallback(HttpParser::HttpRequestState::HTTP_REQUEST_LINE, HandleHttpRequestLine);
@@ -185,6 +190,7 @@ int main(int argc, char* argv[])
             break;
         }
 
+        Log::Logger()->info("Recv data from clientFd:{} dataLen:{}", clientFd, recvLen);
         auto ret = httpParser.ParseRequest(recvLen);
         if (ret.first == HttpParser::HttpParseCode::HTTP_PARSE_CODE_OPEN) {
             Log::Logger()->error("Recv buffer is full, clientFd[{}], continue recv", clientFd);
