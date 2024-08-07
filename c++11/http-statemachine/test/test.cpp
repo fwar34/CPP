@@ -35,11 +35,15 @@ std::vector<std::string> SplitString(const std::string& origin, const std::strin
                 j++;
             }
         } else {
-            if (j != 0) { // 如果splitter不是完全相等则重新从当前位置i比较
+            if (j != 0) { // 如果splitter不是完全相等则重新从此轮比较的开始位置的下一个位置重新开始比较
+                i = i - (j - 1) - 1;
                 j = 0;
-                i--;
             }
         }
+    }
+
+    if (left != origin.size() && right != origin.size()) { // 最后一个字段
+        retVec.push_back(origin.substr(left, origin.size() - left));
     }
 
     return retVec;
@@ -84,6 +88,28 @@ void TestSplitString()
 
     strs.clear();
     strs = SplitString("3xyabcxxyxyefxyxy", "xy");
+    for (auto str : strs) {
+        std::cout << str << std::endl;
+    }
+    std::cout << "-----------------------------------------" << std::endl;
+
+    strs.clear();
+    strs = SplitString("xyabcxxyefxxyabc", "xy");
+    for (auto str : strs) {
+        std::cout << str << std::endl;
+    }
+    std::cout << "-----------------------------------------" << std::endl;
+
+    strs.clear();
+    strs = SplitString("abcab3abcslabc", "abc");
+    for (auto str : strs) {
+        std::cout << str << std::endl;
+    }
+
+    std::cout << "-----------------------------------------" << std::endl;
+
+    strs.clear();
+    strs = SplitString("abcab3abcaslabcdabc", "abca");
     for (auto str : strs) {
         std::cout << str << std::endl;
     }
