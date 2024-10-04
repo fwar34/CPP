@@ -1,4 +1,5 @@
 #include "tlv.h"
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <arpa/inet.h>
@@ -54,15 +55,15 @@ uint16_t EncodeField(FieldInfo* info, char* fieldAddress, char* out)
         len += EncodeStruct(info->fieldInfo, fieldAddress, out);
         break;
     case TAG_SHORT:
-        short* pdata = (short*)fieldAddress;
-        short data = htons(*pdata);
-        memcpy(out, &data, sizeof(short));
+        short* pdataShort = (short*)fieldAddress;
+        short dataShort = htons(*pdataShort);
+        memcpy(out, &dataShort, sizeof(short));
         len += sizeof(short); // value 长度
         break;
     case TAG_INT:
-        int* pdata = (int*)fieldAddress;
-        int data = htonl(*pdata);
-        memcpy(out, &data, sizeof(int));
+        int* pdataInt = (int*)fieldAddress;
+        int dataInt = htonl(*pdataInt);
+        memcpy(out, &dataInt, sizeof(int));
         len += sizeof(int);
         break;
     case TAG_STRING:

@@ -5,33 +5,38 @@
 
 typedef struct
 {
-    char* name;
-    uint32_t age;
-    char* address;
-} Student;
-
-#if 1
+    char* quhao;
+    char* phone;
+} PhoneNum;
 
 typedef struct
 {
-    int level;
-    char* phoneNum;
-    Student xiaofeng;
-    Student* xiaoming;
-} Class;
+    int stress;
+    char* addressName;
+} Address;
 
-#endif
+typedef struct
+{
+    char* name;
+    uint32_t age;
+    PhoneNum* phoneNum;
+    Address address;
+} Student;
 
-FieldInfo* StudentInfo = {
+FieldInfo StudentInfo[4] = 
+{
     {
         .tag = TAG_STRING,
+        .offset = OFFSET(Student, name)
     },
     {
         .tag = TAG_INT,
+        .offset = OFFSET(Student, age)
     },
     {
         .tag = TAG_STRING,
-    }
+        .offset = OFFSET(Student, PhoneNum)
+    },
 };
 
 int main()
