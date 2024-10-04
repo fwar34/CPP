@@ -7,8 +7,9 @@
 #define MSG_CMD 1
 
 #define OFFSET(type, field) (&(((type*)0)->field))
+#define ARRAY_LEN(array, element) (sizeof(array) / sizeof(element))
 
-#define TlvEncode(type, objAddress) TlvEncodeImpl(&(type##Info), objAddress)
+#define TlvEncode(type, objAddress) TlvEncodeImpl(type##Info, ARRAY_LEN(type##Info, type##Info[0]), objAddress)
 #define TlvDecode()
 
 typedef enum
@@ -35,17 +36,19 @@ typedef struct _FieldInfo
     uint16_t len;
     uint16_t offset;
     struct _FieldInfo* fieldInfo;
-    char value[0];
+    // struct _FieldInfo (*fieldInfo)[];
+    uint16_t fieldInfoLen;
 } FieldInfo;
 
 /**
  * @brief Get the Sruct Len object
  * 
  * @param info 此结构体对应的 FieldInfo 数组
+ * @param infoLen 此结构体对应的 FieldInfo 数组元素个数
  * @param objAddress 结构体实例地址
  * @return uint16_t 返回结构体 tag+len+value 序列化的字节大小
  */
-uint16_t GetSructLen(FieldInfo* info, char* objAddress);
+uint16_t GetSructLen(FieldInfo* info, uint16_t infoLen, char* objAddress);
 /**
  * @brief Get the Field Len object
  * 
@@ -67,11 +70,12 @@ uint16_t EncodeField(FieldInfo* info, char* fieldAddress, char* out);
  * @brief 序列化结构体到 buffer
  * 
  * @param info 此结构体对应的 FieldInfo 数组
+ * @param infoLen 此结构体对应的 FieldInfo 数组元素个数
  * @param objAddress 此结构体示例地址
  * @param out 序列化的目标 buffer
  * @return uint16_t 返回此结构体实例 tag+len+value 序列化此实例的字节大小
  */
-uint16_t EncodeStruct(FieldInfo* info, char* objAddress, char* out);
-char* TlvEncodeImpl(FieldInfo* info, char* objAddress);
+uint16_t EncodeStruct(FieldInfo* info, uint16_t infoLen, char* objAddress, char* out);
+char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress);
 
 #endif

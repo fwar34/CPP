@@ -4,10 +4,10 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 
-uint16_t GetSructLen(FieldInfo* info, char* objAddress)
+uint16_t GetSructLen(FieldInfo* info, uint16_t infoLen, char* objAddress)
 {
     uint16_t len = 0;
-    for (int i; i < sizeof(info) / sizeof(info[0]); ++i) {
+    for (int i = 0; i < infoLen; ++i) {
         len += GetFieldLen(&info[i], objAddress + info[i].offset);
     }
 
@@ -18,8 +18,8 @@ uint16_t GetFieldLen(FieldInfo* info, char* fieldAddress)
 {
     switch (info->tag)
     {
-    case TAG_STRUCT:
-        info->len = GetSructLen(info->fieldInfo, fieldAddress);
+    case TAG_STRUCT: // 字段为一个结构体
+        info->len = GetSructLen(info->fieldInfo, info->fieldInfoLen, fieldAddress);
         break;
     case TAG_SHORT:
         info->len = sizeof(short);
@@ -28,7 +28,8 @@ uint16_t GetFieldLen(FieldInfo* info, char* fieldAddress)
         info->len = sizeof(int);
         break;
     case TAG_STRING:
-        info->len = strlen(fieldAddress) + 1;
+        uint16_t len = strlen(*(char**)fieldAddress);
+        info->len = len ? len + 1 : 0;
         break;
     default:
         printf("GetFieldLen file(%s) line(%d) tag(%d)", __FILE__, __LINE__, info->tag);
@@ -52,7 +53,7 @@ uint16_t EncodeField(FieldInfo* info, char* fieldAddress, char* out)
     switch (info->tag) // value
     {
     case TAG_STRUCT: // 当前字段为一个结构体
-        len += EncodeStruct(info->fieldInfo, fieldAddress, out);
+        len += EncodeStruct(info->fieldInfo, info->fieldInfoLen, fieldAddress, out);
         break;
     case TAG_SHORT:
         short* pdataShort = (short*)fieldAddress;
@@ -67,7 +68,7 @@ uint16_t EncodeField(FieldInfo* info, char* fieldAddress, char* out)
         len += sizeof(int);
         break;
     case TAG_STRING:
-        memcpy(out, fieldAddress, info->len);
+        memcpy(out, *(char**)fieldAddress, info->len);
         len += info->len;
         break;
     default:
@@ -78,22 +79,19 @@ uint16_t EncodeField(FieldInfo* info, char* fieldAddress, char* out)
     return len;
 }
 
-uint16_t EncodeStruct(FieldInfo* info, char* objAddress, char* out)
+uint16_t EncodeStruct(FieldInfo* info, uint16_t infoLen, char* objAddress, char* out)
 {
     uint16_t len = 0;
-    for (int i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {
-        len = EncodeField(&info[i], objAddress + info[i].offset, out);
-        out += len;
+    for (int i = 0; i < infoLen; ++i) {
+        len += EncodeField(&info[i], objAddress + info[i].offset, out + len);
     }
     return len;
 }
 
-// Class ban2;
-// TlvEncode(Class, ban2);
-char* TlvEncodeImpl(FieldInfo* info, char* objAddress)
+char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress)
 {
     static uint32_t sequenceNo = 0;
-    uint16_t bufLen = GetSructLen(info, objAddress);
+    uint16_t bufLen = GetSructLen(info, infoLen, objAddress);
     char* buffer = (char*)malloc(bufLen);
     if (!buffer) {
         printf("malloc failed! file(%s) line %d\n", __FILE__, __LINE__);
@@ -108,5 +106,6 @@ char* TlvEncodeImpl(FieldInfo* info, char* objAddress)
     header->sequenceNo = htonl(sequenceNo++);
 
     char* bufTmp = buffer + sizeof(TlvHeader);
-    EncodeStruct(info, objAddress, bufTmp);
+    uint16_t ret = EncodeStruct(info, infoLen, objAddress, bufTmp);
+    return buffer;
 }
