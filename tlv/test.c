@@ -2,6 +2,7 @@
 #define _PROTOCOL_H
 
 #include "tlv.h"
+#include "buffer.h"
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -131,6 +132,11 @@ int ClientSend(char* buffer, uint16_t len)
     }
 
     close(sock);
+}
+
+void TestDecode(char* data, uint16_t len)
+{
+
 }
 
 void TestStudent()
