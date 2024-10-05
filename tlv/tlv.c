@@ -88,10 +88,10 @@ uint16_t EncodeStruct(FieldInfo* info, uint16_t infoLen, char* objAddress, char*
     return len;
 }
 
-char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress)
+char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, int* len)
 {
     static uint32_t sequenceNo = 0;
-    uint16_t bufLen = GetSructLen(info, infoLen, objAddress);
+    uint16_t bufLen = sizeof(TlvHeader) + GetSructLen(info, infoLen, objAddress);
     char* buffer = (char*)malloc(bufLen);
     if (!buffer) {
         printf("malloc failed! file(%s) line %d\n", __FILE__, __LINE__);
@@ -107,5 +107,6 @@ char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress)
 
     char* bufTmp = buffer + sizeof(TlvHeader);
     uint16_t ret = EncodeStruct(info, infoLen, objAddress, bufTmp);
+    *len = bufLen;
     return buffer;
 }

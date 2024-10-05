@@ -9,7 +9,7 @@
 #define OFFSET(type, field) (&(((type*)0)->field))
 #define ARRAY_LEN(array, element) (sizeof(array) / sizeof(element))
 
-#define TlvEncode(type, objAddress) TlvEncodeImpl(type##Info, ARRAY_LEN(type##Info, type##Info[0]), objAddress)
+#define TlvEncode(type, objAddress, lenAddress) TlvEncodeImpl(type##Info, ARRAY_LEN(type##Info, type##Info[0]), objAddress, lenAddress)
 #define TlvDecode()
 
 typedef enum
@@ -76,6 +76,6 @@ uint16_t EncodeField(FieldInfo* info, char* fieldAddress, char* out);
  * @return uint16_t 返回此结构体实例 tag+len+value 序列化此实例的字节大小
  */
 uint16_t EncodeStruct(FieldInfo* info, uint16_t infoLen, char* objAddress, char* out);
-char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress);
+char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, int* len);
 
 #endif
