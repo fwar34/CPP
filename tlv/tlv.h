@@ -9,6 +9,21 @@
 #define OFFSET(type, field) (&(((type*)0)->field))
 #define ARRAY_LEN(array, element) (sizeof(array) / sizeof(element))
 
+#define TlvFieldBegin(type) FieldInfo type##Info[] = {
+#define TlvField(type, field, tagType) \
+    {                                  \
+        .tag = tagType,                \
+        .offset = OFFSET(type, field), \
+    },
+#define TlvFieldStruct(type, fieldType, field, tagType)                       \
+    {                                                                         \
+        .tag = tagType,                                                       \
+        .offset = OFFSET(type, field),                                        \
+        .fieldInfo = fieldType##Info,                                         \
+        .fieldInfoLen = sizeof(fieldType##Info) / sizeof(fieldType##Info[0]), \
+    },
+#define TlvFieldEnd(type) };
+
 #define TlvEncode(type, objAddress, lenAddress) TlvEncodeImpl(type##Info, ARRAY_LEN(type##Info, type##Info[0]), objAddress, lenAddress)
 #define TlvDecode()
 

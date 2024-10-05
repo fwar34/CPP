@@ -13,6 +13,12 @@ typedef struct
     char* phone;
 } PhoneNum;
 
+#if 1
+TlvFieldBegin(PhoneNum)
+TlvField(PhoneNum, quhao, TAG_STRING)
+TlvField(PhoneNum, phone, TAG_STRING)
+TlvFieldEnd(PhoneNum)
+#else
 FieldInfo PhoneNumInfo[2] =
 {
     {
@@ -24,6 +30,7 @@ FieldInfo PhoneNumInfo[2] =
         .offset = OFFSET(PhoneNum, phone)
     }
 };
+#endif
 
 typedef struct
 {
@@ -31,6 +38,12 @@ typedef struct
     char* addressName;
 } Address;
 
+#if 1
+TlvFieldBegin(Address)
+TlvField(Address, stress, TAG_INT)
+TlvField(Address, addressName, TAG_STRING)
+TlvFieldEnd(Address)
+#else
 FieldInfo AddressInfo[2] =
 {
     {
@@ -42,6 +55,7 @@ FieldInfo AddressInfo[2] =
         .offset = OFFSET(Address, addressName)
     }
 };
+#endif
 
 typedef struct
 {
@@ -52,6 +66,14 @@ typedef struct
     Address address;
 } Student;
 
+#if 1
+TlvFieldBegin(Student)
+TlvField(Student, name, TAG_STRING)
+TlvField(Student, age, TAG_INT)
+TlvFieldStruct(Student, PhoneNum, phoneNum, TAG_STRUCT)
+TlvFieldStruct(Student, Address, address, TAG_STRUCT)
+TlvFieldEnd(Student)
+#else
 FieldInfo StudentInfo[] = 
 {
     {
@@ -75,6 +97,7 @@ FieldInfo StudentInfo[] =
         .fieldInfoLen = sizeof(AddressInfo) / sizeof(AddressInfo[0])
     }
 };
+#endif
 
 int ClientSend(char* buffer, uint16_t len)
 {
