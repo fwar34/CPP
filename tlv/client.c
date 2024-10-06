@@ -153,6 +153,48 @@ void TestStudent()
     ClientSend(buffer, len);
 }
 
+int Process(Buffer* buffer)
+{
+    for (;;) {
+        if (BufferReadableCount(buffer) < sizeof(TlvHeader)) { // TlvHeader 没有接收完整，继续接收
+            if (BufferGetReadIndex(buffer) != 0) { // 如果 buffer 中的内容不是从0开始的则移动 buffer 中的内容到 buffer 起始
+                MoveBuffer(buffer);
+            }
+            return -1;
+        }
+
+        TlvHeader *tmp = (TlvHeader *)(buffer->data);
+        uint16_t totalLen = ntohl(tmp->totalLen);
+        if (BufferReadableCount(buffer) < totalLen) { // 整个消息没有接收完整，继续接收
+            if (BufferGetReadIndex(&buffer) != 0) { // 如果 buffer 中的内容不是从0开始的则移动 buffer 中的内容到 buffer 起始
+                MoveBuffer(buffer);
+            }
+            return -2;
+        }
+
+        TlvHeader tlvhdr;
+        bzero(&tlvhdr, sizeof(tlvhdr));
+        tlvhdr.totalLen = ntohl(tmp->totalLen);
+        tlvhdr.version = ntohs(tmp->version);
+        tlvhdr.commandId = ntohs(tmp->commandId);
+        tlvhdr.sequenceNo = ntohl(tmp->sequenceNo);
+
+        switch (tlvhdr.commandId)
+        {
+        case MSG_CMD:
+            Student student;
+            TlvDecode(Student, &student, BufferReadBuf(buffer) + sizeof(TlvHeader), 
+                tlvhdr.totalLen - sizeof(TlvHeader));
+            // DecodeStruct(Student, &student, BufferReadBuf(buffer) + sizeof(TlvHeader), 
+            //     tlvhdr.totalLen - sizeof(TlvHeader));
+            break;
+        default:
+            break;
+        }
+        BufferRetrieve(buffer, tlvhdr.totalLen);
+    }
+}
+
 //  nc -l -p 8888 | hexdump -e '16/1 "%02x " "\n"' 可以使用 nc 和 hexdump 来模拟 server，以16进制打印出收到的内容
 int main()
 {

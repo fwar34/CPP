@@ -7,5 +7,8 @@ set(CMAKE_BUILD_TYPE Debug)
 add_library(tlv tlv.c tlv.h)
 
 # test
-add_executable(test test.c)
-target_link_libraries(test tlv)
+add_executable(client client.c)
+target_link_libraries(client tlv)
+
+add_executable(server server.c)
+target_link_libraries(server tlv)

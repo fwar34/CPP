@@ -1,12 +1,10 @@
+#include "common.h"
 #include "tlv.h"
 #include "buffer.h"
 #include <sys/socket.h>
 #include <string.h>
 
-#define LOG_ERR(...) printf("function(%s) error file(%s) line(%d)\n", __VA_ARGS__, __FILE__, __LINE__);
-
 extern int Process(Buffer* buffer);
-
 static void MoveBuffer(Buffer* buffer)
 {
     uint remainLen = BufferReadableCount(buffer);
@@ -14,7 +12,6 @@ static void MoveBuffer(Buffer* buffer)
     BufferSetReadIndex(&buffer, 0);
     BufferSetWriteIndex(&buffer, remainLen);
 }
-
 
 static int Start()
 {
@@ -61,11 +58,13 @@ static int Start()
                 break;
             }
             BufferSetWriteIndex(recvLen + BufferGetWriteIndex(&buffer));
-            TlvDecode(&buffer);
+            Process(&buffer);
         }
     }
 }
 int main()
 {
+    Start();
 
+    return 0;
 }

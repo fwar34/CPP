@@ -112,77 +112,60 @@ char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, int* le
     return buffer;
 }
 
-int DecodeStruct(FieldInfo* info, uint16_t infoLen, char* objAddress, char* buffer, uint32_t len)
+int DecodeField(FieldInfo* info, char* fieldAddress, char* buffer, uint32_t len)
 {
-    uint8_t infoIndex = 0;
-    uint16_t bufferIndex = 0;
-    uint8_t tag = *(uint8_t*)(buffer + bufferIndex); // tag:1byte
-    bufferIndex += TAG_LEN;
-    while (bufferIndex < len) {
-        switch (tag)
-        {
-        case TAG_STRUCT:
-            // DecodeStruct
-            break;
-        case TAG_SHORT:
-            break;
-        case TAG_INT:
-            break;
-        case TAG_STRING:
-            FieldInfo* pInfo = &info[infoIndex++];
-            if (pInfo->tag != tag) {
-                printf("DecodeStruct failed! file(%s) line(%d)\n", __FILE__, __LINE__);
-                return TLV_ERROR_TAG;
-            }
-            uint16_t stringLen = ntohs(*(uint16_t*)(buffer + bufferIndex));
-            bufferIndex += LEN_LEN; // len:2bytes
-            char* str = (char*)malloc(stringLen);
-            memcpy(str, buffer + bufferIndex, stringLen);
-            bufferIndex += stringLen;
-            *(char**)(objAddress + pInfo->offset) = str; // 依据字段在结构体中的偏移来设置字段值
-            break;
-        default:
-            break;
-        }
+    uint8_t tag = *(uint8_t *)buffer;
+    if (info->tag != tag) {
+        LOG_ERR("DecodeField");
+        return TLV_ERROR_TAG;
     }
+
+    buffer += TAG_LEN;
+    uint16_t valueLen = *(uint16_t*)buffer;
+    buffer += VALUE_LEN_LEN;
+
+    switch (tag)
+    {
+    case TAG_STRUCT:
+        DecodeStruct(info->fieldInfo, info->fieldInfoLen, fieldAddress, buffer, valueLen);
+        break;
+    case TAG_SHORT:
+    case TAG_INT:
+        memcpy(fieldAddress, buffer, valueLen);
+        break;
+    case TAG_STRING:
+        char *str = (char *)malloc(valueLen);
+        memcpy(str, buffer, valueLen);
+        // *(char **)fieldAddress = str;
+        memcpy(fieldAddress, &str, sizeof(char *));
+        break;
+    default:
+        return TLV_ERROR_OK;
+    }
+    return TLV_ERROR_OK;
 }
 
-int TlvDecodeImpl(Buffer* buffer)
+int DecodeStruct(FieldInfo* info, uint16_t infoLen, char* objAddress, char* buffer, uint32_t len)
 {
-    for (;;) {
-        if (BufferReadableCount(buffer) < sizeof(TlvHeader)) { // TlvHeader 没有接收完整，继续接收
-            if (BufferGetReadIndex(buffer) != 0) { // 如果 buffer 中的内容不是从0开始的则移动 buffer 中的内容到 buffer 起始
-                MoveBuffer(buffer);
-            }
-            return -1;
-        }
-
-        TlvHeader *tmp = (TlvHeader *)(buffer->data);
-        uint16_t totalLen = ntohl(tmp->totalLen);
-        if (BufferReadableCount(buffer) < totalLen) { // 整个消息没有接收完整，继续接收
-            if (BufferGetReadIndex(&buffer) != 0) { // 如果 buffer 中的内容不是从0开始的则移动 buffer 中的内容到 buffer 起始
-                MoveBuffer(buffer);
-            }
-            return -2;
-        }
-
-        TlvHeader tlvhdr;
-        bzero(&tlvhdr, sizeof(tlvhdr));
-        tlvhdr.totalLen = ntohl(tmp->totalLen);
-        tlvhdr.version = ntohs(tmp->version);
-        tlvhdr.commandId = ntohs(tmp->commandId);
-        tlvhdr.sequenceNo = ntohl(tmp->sequenceNo);
-
-        switch (tlvhdr.commandId)
-        {
-        case MSG_CMD:
-            Student student;
-            DecodeStruct(Student, &student, BufferReadBuf(buffer) + sizeof(TlvHeader), 
-                tlvhdr.totalLen - sizeof(TlvHeader));
-            break;
-        default:
+    FieldInfo* pInfo = NULL;
+    uint8_t infoIndex = 0;
+    uint16_t bufferIndex = 0;
+    uint16_t valueLen = 0;
+    for (char* tmp = buffer; tmp < buffer + len; tmp += TAG_LEN + VALUE_LEN_LEN + valueLen) {
+        if (infoIndex >= infoLen) {
+            LOG_ERR("DecodeStruct");
             break;
         }
-        BufferRetrieve(buffer, tlvhdr.totalLen);
+        pInfo = &info[infoIndex++];
+        valueLen = *(uint16_t*)(tmp + TAG_LEN);
+        // objAddress + pInfo->offset 依据字段在结构体中的偏移来设置字段值
+        DecodeField(pInfo, objAddress + pInfo->offset, tmp, TAG_LEN + VALUE_LEN_LEN + valueLen);
     }
+
+    return TLV_ERROR_OK;
+}
+
+int TlvDecodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, char* buffer, uint32_t len)
+{
+    return DecodeStruct(info, infoLen, objAddress, buffer, len);
 }
