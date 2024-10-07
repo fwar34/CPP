@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-const uint32_t BUF_LEN = 2048;
+#define BUF_LEN 2048
 
 typedef struct
 {

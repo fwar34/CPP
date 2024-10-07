@@ -2,10 +2,30 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch",
+            "name": "(gdb) Launch server",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/tlv/build/test",
+            "program": "${workspaceFolder}/tlv/build/server",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/tlv",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            // "preLaunchTask": "CMake: build"
+        },
+        {
+            "name": "(gdb) Launch client",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/tlv/build/client",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/tlv",
