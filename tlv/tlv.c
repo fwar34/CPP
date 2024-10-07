@@ -9,28 +9,41 @@ uint16_t GetSructLen(FieldInfo* info, uint16_t infoLen, char* objAddress)
 {
     uint16_t len = 0;
     for (int i = 0; i < infoLen; ++i) {
-        len += GetFieldLen(&info[i], objAddress + info[i].offset);
+        uint16_t binaryLen = 0;
+        if (info[i].tag == TAG_BINARY) {
+            binaryLen = *(uint16_t*)(objAddress + info[i].binaryLenOffset);
+        }
+        len += GetFieldLen(&info[i], objAddress + info[i].offset, binaryLen);
     }
 
     return len;
 }
 
-uint16_t GetFieldLen(FieldInfo* info, char* fieldAddress)
+uint16_t GetFieldLen(FieldInfo* info, char* fieldAddress, uint16_t binaryLen)
 {
     switch (info->tag)
     {
     case TAG_STRUCT: // 字段为一个结构体
         info->len = GetSructLen(info->fieldInfo, info->fieldInfoLen, fieldAddress);
         break;
-    case TAG_SHORT:
-        info->len = sizeof(short);
+    case TAG_1BYTE:
+        info->len = sizeof(uint8_t);
         break;
-    case TAG_INT:
-        info->len = sizeof(int);
+    case TAG_2BYTE:
+        info->len = sizeof(uint16_t);
+        break;
+    case TAG_4BYTE:
+        info->len = sizeof(uint32_t);
+        break;
+    case TAG_8BYTE:
+        info->len = sizeof(uint64_t);
         break;
     case TAG_STRING:
         uint16_t len = strlen(*(char**)fieldAddress);
         info->len = len ? len + 1 : 0;
+        break;
+    case TAG_BINARY:
+        info->len = binaryLen;
         break;
     default:
         printf("GetFieldLen file(%s) line(%d) tag(%d)", __FILE__, __LINE__, info->tag);
@@ -56,19 +69,32 @@ uint16_t EncodeField(FieldInfo* info, char* fieldAddress, char* out)
     case TAG_STRUCT: // 当前字段为一个结构体
         len += EncodeStruct(info->fieldInfo, info->fieldInfoLen, fieldAddress, out);
         break;
-    case TAG_SHORT:
-        short* pdataShort = (short*)fieldAddress;
-        short dataShort = htons(*pdataShort);
-        memcpy(out, &dataShort, sizeof(short));
-        len += sizeof(short); // value 长度
+    case TAG_1BYTE:
+        memcpy(out, fieldAddress, sizeof(uint8_t));
+        len += sizeof(uint8_t);
         break;
-    case TAG_INT:
-        int* pdataInt = (int*)fieldAddress;
-        int dataInt = htonl(*pdataInt);
-        memcpy(out, &dataInt, sizeof(int));
-        len += sizeof(int);
+    case TAG_2BYTE:
+        uint16_t dataShort = htons(*(uint16_t*)fieldAddress);
+        memcpy(out, &dataShort, sizeof(uint16_t));
+        len += sizeof(uint8_t); // value 长度
+        break;
+    case TAG_4BYTE:
+        uint32_t dataInt = htonl(*(uint32_t*)fieldAddress);
+        memcpy(out, &dataInt, sizeof(uint32_t));
+        len += sizeof(uint32_t);
+        break;
+    case TAG_8BYTE:
+        // 大端转小端
+        for (uint8_t i = 0; i < 8; ++i) {
+            out[i] = fieldAddress[8 - i - 1];
+        }
+        len += sizeof(uint64_t);
         break;
     case TAG_STRING:
+        memcpy(out, *(char**)fieldAddress, info->len);
+        len += info->len;
+        break;
+    case TAG_BINARY:
         memcpy(out, *(char**)fieldAddress, info->len);
         len += info->len;
         break;
@@ -106,8 +132,14 @@ char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, int* le
     header->commandId = htons(MSG_CMD);
     header->sequenceNo = htonl(sequenceNo++);
 
+    printf("sizeof(TlvHeader) = %d\n", sizeof(TlvHeader));
     char* bufTmp = buffer + sizeof(TlvHeader);
     uint16_t ret = EncodeStruct(info, infoLen, objAddress, bufTmp);
+    if (ret != bufLen - sizeof(TlvHeader)) {
+        LOG_ERR("TlvEncodeImpl");
+        // free(buffer);
+        // return NULL;
+    }
     *len = bufLen;
     return buffer;
 }
@@ -129,14 +161,17 @@ int DecodeField(FieldInfo* info, char* fieldAddress, char* buffer, uint32_t len)
     case TAG_STRUCT:
         DecodeStruct(info->fieldInfo, info->fieldInfoLen, fieldAddress, buffer, valueLen);
         break;
-    case TAG_SHORT:
-    case TAG_INT:
+    case TAG_1BYTE:
+    case TAG_2BYTE:
+    case TAG_4BYTE:
+    case TAG_8BYTE:
         for (int i = 0; i < valueLen; ++i) {
             fieldAddress[i] = buffer[valueLen - i - 1];
         }
         // memcpy(fieldAddress, buffer, valueLen);
         break;
     case TAG_STRING:
+    case TAG_BINARY:
         char *str = (char *)malloc(valueLen);
         memcpy(str, buffer, valueLen);
         // *(char **)fieldAddress = str;

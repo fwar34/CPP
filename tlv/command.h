@@ -36,7 +36,7 @@ typedef struct
 
 #if 1
 TlvFieldBegin(Address)
-TlvField(Address, stress, TAG_INT)
+TlvField(Address, stress, TAG_4BYTE)
 TlvField(Address, addressName, TAG_STRING)
 TlvFieldEnd(Address)
 #else
@@ -60,14 +60,18 @@ typedef struct
     PhoneNum phoneNum; // 结构体嵌套只接受组合的类型，不支持下面的 PhoneNum*
     // PhoneNum* phoneNum;
     Address address;
+    char* data;
+    uint16_t dataLen;
 } Student;
 
 #if 1
 TlvFieldBegin(Student)
 TlvField(Student, name, TAG_STRING)
-TlvField(Student, age, TAG_INT)
-TlvFieldStruct(Student, PhoneNum, phoneNum, TAG_STRUCT)
-TlvFieldStruct(Student, Address, address, TAG_STRUCT)
+TlvField(Student, age, TAG_4BYTE)
+TlvFieldStruct(Student, PhoneNum, phoneNum)
+TlvFieldStruct(Student, Address, address)
+TlvFieldBinary(Student, data, dataLen)
+TlvField(Student, dataLen, TAG_2BYTE)
 TlvFieldEnd(Student)
 #else
 FieldInfo StudentInfo[] = 

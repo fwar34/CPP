@@ -1,6 +1,7 @@
 #ifndef _PROTOCOL_H
 #define _PROTOCOL_H
 
+#include "common.h"
 #include "command.h"
 #include "tlv.h"
 #include "buffer.h"
@@ -8,6 +9,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdio.h>
 
 static int ClientSend(char* buffer, uint16_t len)
 {
@@ -52,8 +54,22 @@ static void TestStudent()
     xiaoming.address.stress = 99;
     xiaoming.phoneNum.quhao = "123";
     xiaoming.phoneNum.phone = "189723i4u9234";
+    xiaoming.data = (char*)malloc(999);
+    bzero(xiaoming.data, 999);
+    FILE* file = fopen("./data.bin", "rb");
+    if (!file) {
+        LOG_ERR("fopen");
+        return;
+    }
+    size_t rsize = fread(xiaoming.data, 1, 999, file);
+    printf("read %d bytes from ../data.bin\n", rsize);
+    xiaoming.dataLen = rsize;
     uint16_t len = 0;
     char *buffer = TlvEncode(Student, &xiaoming, &len);
+    if (!buffer) {
+        LOG_ERR("ElvEncode");
+        return;
+    }
     ClientSend(buffer, len);
 }
 

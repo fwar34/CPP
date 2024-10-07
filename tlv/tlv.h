@@ -15,17 +15,37 @@
 
 #define TlvImport(type) extern FieldInfo type##Info[]
 #define TlvFieldBegin(type) FieldInfo type##Info[] = {
+/**
+ * @brief 普通字段使用
+ *
+ */
 #define TlvField(type, field, tagType) \
     {                                  \
         .tag = tagType,                \
         .offset = OFFSET(type, field), \
     },
-#define TlvFieldStruct(type, fieldType, field, tagType)                       \
+/**
+ * @brief 结构体字段使用
+ * field 结构体字段名称
+ * fieldType 结构体字段对应的结构体
+ */
+#define TlvFieldStruct(type, fieldType, field)                                \
     {                                                                         \
-        .tag = tagType,                                                       \
+        .tag = TAG_STRUCT,                                                    \
         .offset = OFFSET(type, field),                                        \
         .fieldInfo = fieldType##Info,                                         \
         .fieldInfoLen = sizeof(fieldType##Info) / sizeof(fieldType##Info[0]), \
+    },
+/**
+ * @brief 二进制字段使用
+ * field 二进制字段名称
+ * fieldLen 二进制字段对应长度字段的名称
+ */
+#define TlvFieldBinary(type, field, fieldLen)      \
+    {                                              \
+        .tag = TAG_BINARY,                         \
+        .offset = OFFSET(type, field),             \
+        .binaryLenOffset = OFFSET(type, fieldLen), \
     },
 #define TlvFieldEnd(type) };
 
@@ -34,12 +54,19 @@
 #define TlvDecode(type, objAddress, buffer, len) \
     TlvDecodeImpl(type##Info, ARRAY_LEN(type##Info), objAddress, buffer, len)
 
+/**
+ * @brief tlv 支持的数据类型
+ * 
+ */
 typedef enum
 {
     TAG_STRUCT = 1,
-    TAG_SHORT,
-    TAG_INT,
-    TAG_STRING,
+    TAG_1BYTE,
+    TAG_2BYTE,
+    TAG_4BYTE,
+    TAG_8BYTE,
+    TAG_STRING, // c风格字符串
+    TAG_BINARY, // 二进制数据
     TAG_MAX,
 } TagType;
 
@@ -52,14 +79,23 @@ typedef struct
     char checkNumber[16];
 } TlvHeader;
 
+/**
+ * @brief 结构体中字段描述信息
+ *  tag 字段类型
+ *  len 字段的字节长度，TAG_STRING 和 TAG_BINARY 的是对应的 buffer 的长度
+ *  offset 字段在结构中的偏移
+ *  binaryLenOffset 如果字段是二进制类型时，二进制类型长度字段在结构体中的偏移
+ *  fieldInfo 字段是个结构体时候指向了此字段对应的结构体类型的 FieldInfo 数据
+ *  fieldInfoLen fieldInfo 数组元素个数
+ */
 typedef struct _FieldInfo
 {
     uint8_t tag;
     uint16_t len;
-    uint16_t offset; // 字段在结构体中的偏移字节
-    struct _FieldInfo* fieldInfo; // 如果字段是个 struct，则有此字段
-    // struct _FieldInfo (*fieldInfo)[];
-    uint16_t fieldInfoLen; // fieldInfo 数组元素个数
+    uint16_t offset;
+    uint16_t binaryLenOffset;
+    struct _FieldInfo* fieldInfo;
+    uint16_t fieldInfoLen;
 } FieldInfo;
 
 /**
@@ -76,9 +112,10 @@ uint16_t GetSructLen(FieldInfo* info, uint16_t infoLen, char* objAddress);
  * 
  * @param info 此字段对应的 FieldInfo 结构体指针
  * @param fieldAddress 此字段起始地址
+ * @param binaryLen 此字段是二进制的时候对应的二进制长度
  * @return uint16_t 返回此字段 tag+len+value 序列化的字节大小
  */
-uint16_t GetFieldLen(FieldInfo* info, char* fieldAddress);
+uint16_t GetFieldLen(FieldInfo* info, char* fieldAddress, uint16_t binaryLen);
 /**
  * @brief 序列化一个字段
  * 
