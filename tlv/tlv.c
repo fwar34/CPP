@@ -21,6 +21,9 @@ uint16_t GetSructLen(FieldInfo* info, uint16_t infoLen, char* objAddress)
 
 uint16_t GetFieldLen(FieldInfo* info, char* fieldAddress, uint16_t binaryLen)
 {
+    // 此函数会给每个字段的 FieldInfo 中的 len 设置上实例 filedAddress 对应字段的大小，
+    // 在 Encode 函数中会直接使用此处赋值的 len
+    // (TAG_STRING 和 TAG_BINARY 的 len 设置的是对应 buffer 的长度)
     switch (info->tag)
     {
     case TAG_STRUCT: // 字段为一个结构体
@@ -91,9 +94,6 @@ uint16_t EncodeField(FieldInfo* info, char* fieldAddress, char* out)
         len += sizeof(uint64_t);
         break;
     case TAG_STRING:
-        memcpy(out, *(char**)fieldAddress, info->len);
-        len += info->len;
-        break;
     case TAG_BINARY:
         memcpy(out, *(char**)fieldAddress, info->len);
         len += info->len;
@@ -171,16 +171,11 @@ int DecodeField(FieldInfo* info, char* fieldAddress, char* buffer, uint32_t len)
         // memcpy(fieldAddress, buffer, valueLen);
         break;
     case TAG_STRING:
+    case TAG_BINARY:
         char *str = (char *)malloc(valueLen);
         memcpy(str, buffer, valueLen);
         // *(char **)fieldAddress = str;
         memcpy(fieldAddress, &str, sizeof(char *));
-        break;
-    case TAG_BINARY:
-        char *str2 = (char *)malloc(valueLen);
-        memcpy(str2, buffer, valueLen);
-        // *(char **)fieldAddress = str;
-        memcpy(fieldAddress, &str2, sizeof(char *));
         break;
     default:
         return TLV_ERROR_OK;
