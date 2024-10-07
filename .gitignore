@@ -19,3 +19,4 @@ qr_*.*
 .vs/
 out/
 main
+out.bin

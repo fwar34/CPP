@@ -6,6 +6,8 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 static void DumpStudent(Student* student)
 {
@@ -21,7 +23,7 @@ static void DumpStudent(Student* student)
         return;
     }
     size_t wsize = fwrite(student->data, 1, student->dataLen, file);
-    printf("write ./out.bin %d bytes\n", wsize);
+    printf("write ./out.bin %zu bytes\n", wsize);
     fclose(file);
 }
 
@@ -65,7 +67,7 @@ static int Process(Buffer* buffer)
         TlvHeader *tmp = (TlvHeader *)(buffer->data);
         uint16_t totalLen = ntohl(tmp->totalLen);
         if (BufferReadableCount(buffer) < totalLen) { // 整个消息没有接收完整，继续接收
-            if (BufferGetReadIndex(&buffer) != 0) { // 如果 buffer 中的内容不是从0开始的则移动 buffer 中的内容到 buffer 起始
+            if (BufferGetReadIndex(buffer) != 0) { // 如果 buffer 中的内容不是从0开始的则移动 buffer 中的内容到 buffer 起始
                 MoveBuffer(buffer);
             }
             return -2;

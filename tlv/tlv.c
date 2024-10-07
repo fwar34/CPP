@@ -115,7 +115,7 @@ uint16_t EncodeStruct(FieldInfo* info, uint16_t infoLen, char* objAddress, char*
     return len;
 }
 
-char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, int* len)
+char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, uint16_t* len)
 {
     static uint32_t sequenceNo = 0;
     uint16_t bufLen = sizeof(TlvHeader) + GetSructLen(info, infoLen, objAddress);
@@ -132,7 +132,7 @@ char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, int* le
     header->commandId = htons(MSG_CMD);
     header->sequenceNo = htonl(sequenceNo++);
 
-    printf("sizeof(TlvHeader) = %d\n", sizeof(TlvHeader));
+    printf("sizeof(TlvHeader) = %zu\n", sizeof(TlvHeader));
     char* bufTmp = buffer + sizeof(TlvHeader);
     uint16_t ret = EncodeStruct(info, infoLen, objAddress, bufTmp);
     if (ret != bufLen - sizeof(TlvHeader)) {

@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static int ClientSend(char* buffer, uint16_t len)
 {
@@ -63,7 +64,7 @@ static void TestStudent()
     }
     size_t rsize = fread(xiaoming.data, 1, 999, file);
     fclose(file);
-    printf("read %d bytes from ../data.bin\n", rsize);
+    printf("read %zu bytes from ../data.bin\n", rsize);
     xiaoming.dataLen = rsize;
     uint16_t len = 0;
     char *buffer = TlvEncode(Student, &xiaoming, &len);

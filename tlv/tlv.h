@@ -10,7 +10,7 @@
 #define TAG_LEN 1
 #define VALUE_LEN_LEN 2
 
-#define OFFSET(type, field) (&(((type*)0)->field))
+#define OFFSET(type, field) (uintptr_t)(&(((type*)0)->field))
 #define ARRAY_LEN(array) (sizeof(array) / sizeof(array[0]))
 
 #define TlvImport(type) extern FieldInfo type##Info[]
@@ -19,20 +19,20 @@
  * @brief 普通字段使用
  *
  */
-#define TlvField(type, field, tagType) \
-    {                                  \
-        .tag = tagType,                \
-        .offset = OFFSET(type, field), \
+#define TlvField(type, fieldName, tagType) \
+    {                                      \
+        .tag = tagType,                    \
+        .offset = OFFSET(type, fieldName), \
     },
 /**
  * @brief 结构体字段使用
  * field 结构体字段名称
  * fieldType 结构体字段对应的结构体
  */
-#define TlvFieldStruct(type, fieldType, field)                                \
+#define TlvFieldStruct(type, fieldName, fieldType)                            \
     {                                                                         \
         .tag = TAG_STRUCT,                                                    \
-        .offset = OFFSET(type, field),                                        \
+        .offset = OFFSET(type, fieldName),                                    \
         .fieldInfo = fieldType##Info,                                         \
         .fieldInfoLen = sizeof(fieldType##Info) / sizeof(fieldType##Info[0]), \
     },
@@ -41,18 +41,18 @@
  * field 二进制字段名称
  * fieldLen 二进制字段对应长度字段的名称
  */
-#define TlvFieldBinary(type, field, fieldLen)      \
-    {                                              \
-        .tag = TAG_BINARY,                         \
-        .offset = OFFSET(type, field),             \
-        .binaryLenOffset = OFFSET(type, fieldLen), \
+#define TlvFieldBinary(type, fieldName, fieldLenName)  \
+    {                                                  \
+        .tag = TAG_BINARY,                             \
+        .offset = OFFSET(type, fieldName),             \
+        .binaryLenOffset = OFFSET(type, fieldLenName), \
     },
 #define TlvFieldEnd(type) };
 
 #define TlvEncode(type, objAddress, lenAddress) \
-    TlvEncodeImpl(type##Info, ARRAY_LEN(type##Info), objAddress, lenAddress)
+    TlvEncodeImpl(type##Info, ARRAY_LEN(type##Info), (char*)(objAddress), lenAddress)
 #define TlvDecode(type, objAddress, buffer, len) \
-    TlvDecodeImpl(type##Info, ARRAY_LEN(type##Info), objAddress, buffer, len)
+    TlvDecodeImpl(type##Info, ARRAY_LEN(type##Info), (char*)(objAddress), buffer, len)
 
 /**
  * @brief tlv 支持的数据类型
@@ -144,7 +144,7 @@ uint16_t EncodeStruct(FieldInfo* info, uint16_t infoLen, char* objAddress, char*
  * @param len 返回序列化后的 buffer 长度
  * @return char* 返回序列化后的 buffer
  */
-char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, int* len);
+char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, uint16_t* len);
 /**
  * @brief 反序列化结构体字段
  * 
