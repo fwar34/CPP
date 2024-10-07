@@ -62,6 +62,7 @@ static void TestStudent()
         return;
     }
     size_t rsize = fread(xiaoming.data, 1, 999, file);
+    fclose(file);
     printf("read %d bytes from ../data.bin\n", rsize);
     xiaoming.dataLen = rsize;
     uint16_t len = 0;
@@ -73,10 +74,19 @@ static void TestStudent()
     ClientSend(buffer, len);
 }
 
+void TestFunction()
+{
+    Test test;
+    test.a = 112;
+    test.b = 113;
+    uint16_t len = 0;
+    char* buffer = TlvEncode(Test, &test, &len);
+}
 
 //  nc -l -p 8888 | hexdump -e '16/1 "%02x " "\n"' 可以使用 nc 和 hexdump 来模拟 server，以16进制打印出收到的内容
 int main()
 {
+    TestFunction();
     TestStudent();
 
     return 0;

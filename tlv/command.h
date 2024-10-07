@@ -99,4 +99,15 @@ FieldInfo StudentInfo[] =
 };
 #endif
 
+typedef struct
+{
+    uint32_t a;
+    uint16_t b;
+} Test;
+
+TlvFieldBegin(Test)
+TlvField(Test, a, TAG_4BYTE)
+TlvField(Test, b, TAG_2BYTE)
+TlvFieldEnd(Test)
+
 #endif

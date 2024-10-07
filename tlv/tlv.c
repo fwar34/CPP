@@ -76,7 +76,7 @@ uint16_t EncodeField(FieldInfo* info, char* fieldAddress, char* out)
     case TAG_2BYTE:
         uint16_t dataShort = htons(*(uint16_t*)fieldAddress);
         memcpy(out, &dataShort, sizeof(uint16_t));
-        len += sizeof(uint8_t); // value 长度
+        len += sizeof(uint16_t); // value 长度
         break;
     case TAG_4BYTE:
         uint32_t dataInt = htonl(*(uint32_t*)fieldAddress);
@@ -137,8 +137,8 @@ char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, int* le
     uint16_t ret = EncodeStruct(info, infoLen, objAddress, bufTmp);
     if (ret != bufLen - sizeof(TlvHeader)) {
         LOG_ERR("TlvEncodeImpl");
-        // free(buffer);
-        // return NULL;
+        free(buffer);
+        return NULL;
     }
     *len = bufLen;
     return buffer;
@@ -171,11 +171,16 @@ int DecodeField(FieldInfo* info, char* fieldAddress, char* buffer, uint32_t len)
         // memcpy(fieldAddress, buffer, valueLen);
         break;
     case TAG_STRING:
-    case TAG_BINARY:
         char *str = (char *)malloc(valueLen);
         memcpy(str, buffer, valueLen);
         // *(char **)fieldAddress = str;
         memcpy(fieldAddress, &str, sizeof(char *));
+        break;
+    case TAG_BINARY:
+        char *str2 = (char *)malloc(valueLen);
+        memcpy(str2, buffer, valueLen);
+        // *(char **)fieldAddress = str;
+        memcpy(fieldAddress, &str2, sizeof(char *));
         break;
     default:
         return TLV_ERROR_OK;

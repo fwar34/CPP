@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <stdio.h>
 
 static void DumpStudent(Student* student)
 {
@@ -14,6 +15,33 @@ static void DumpStudent(Student* student)
     printf("phone = %s\n", student->phoneNum.phone);
     printf("stress = %d\n", student->address.stress);
     printf("addressName = %s\n", student->address.addressName);
+    FILE* file = fopen("./out.bin", "wb+");
+    if (!file) {
+        LOG_ERR("fopen ./out.bin");
+        return;
+    }
+    size_t wsize = fwrite(student->data, 1, student->dataLen, file);
+    printf("write ./out.bin %d bytes\n", wsize);
+    fclose(file);
+}
+
+static void FreeStudent(Student* student)
+{
+    if (student->name) {
+        free(student->name);
+    }
+
+    if (student->phoneNum.phone) {
+        free(student->phoneNum.quhao);
+    }
+
+    if (student->phoneNum.phone) {
+        free(student->phoneNum.phone);
+    }
+
+    if (student->address.addressName) {
+        free(student->address.addressName);
+    }
 }
 
 static void MoveBuffer(Buffer* buffer)
@@ -57,6 +85,7 @@ static int Process(Buffer* buffer)
             TlvDecode(Student, &student, BufferReadBuf(buffer) + sizeof(TlvHeader), 
                 tlvhdr.totalLen - sizeof(TlvHeader));
             DumpStudent(&student);
+            FreeStudent(&student);
             break;
         default:
             break;
