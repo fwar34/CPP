@@ -1,7 +1,6 @@
 #ifndef _TLV_H
 #define _TLV_H
 
-#include "buffer.h"
 #include <inttypes.h>
 
 #define MSG_VERSION 31111
