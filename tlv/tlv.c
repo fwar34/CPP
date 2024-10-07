@@ -121,7 +121,7 @@ int DecodeField(FieldInfo* info, char* fieldAddress, char* buffer, uint32_t len)
     }
 
     buffer += TAG_LEN;
-    uint16_t valueLen = *(uint16_t*)buffer;
+    uint16_t valueLen = ntohs(*(uint16_t*)buffer);
     buffer += VALUE_LEN_LEN;
 
     switch (tag)
@@ -131,7 +131,10 @@ int DecodeField(FieldInfo* info, char* fieldAddress, char* buffer, uint32_t len)
         break;
     case TAG_SHORT:
     case TAG_INT:
-        memcpy(fieldAddress, buffer, valueLen);
+        for (int i = 0; i < valueLen; ++i) {
+            fieldAddress[i] = buffer[valueLen - i - 1];
+        }
+        // memcpy(fieldAddress, buffer, valueLen);
         break;
     case TAG_STRING:
         char *str = (char *)malloc(valueLen);
@@ -157,7 +160,7 @@ int DecodeStruct(FieldInfo* info, uint16_t infoLen, char* objAddress, char* buff
             break;
         }
         pInfo = &info[infoIndex++];
-        valueLen = *(uint16_t*)(tmp + TAG_LEN);
+        valueLen = ntohs(*(uint16_t*)(tmp + TAG_LEN));
         // objAddress + pInfo->offset 依据字段在结构体中的偏移来设置字段值
         DecodeField(pInfo, objAddress + pInfo->offset, tmp, TAG_LEN + VALUE_LEN_LEN + valueLen);
     }

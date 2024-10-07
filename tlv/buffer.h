@@ -18,6 +18,7 @@ void BufferSetReadIndex(Buffer* buffer, uint16_t index);
 void BufferSetWriteIndex(Buffer* buffer, uint16_t index);
 void BufferReset(Buffer* buffer);
 uint16_t BufferReadableCount(Buffer* buffer);
+uint16_t BufferWriteableCount(Buffer* buffer);
 uint16_t BufferRetrieve(Buffer* buffer, uint16_t len);
 char* BufferReadBuf(Buffer* buffer);
 

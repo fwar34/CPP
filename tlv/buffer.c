@@ -28,6 +28,11 @@ uint16_t BufferReadableCount(Buffer* buffer)
     return 0;
 }
 
+uint16_t BufferWriteableCount(Buffer* buffer)
+{
+    return BUF_LEN - buffer->writeIndex;
+}
+
 void BufferReset(Buffer* buffer)
 {
     buffer->readIndex = 0;

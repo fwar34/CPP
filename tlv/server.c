@@ -6,6 +6,16 @@
 #include <netinet/in.h>
 #include <string.h>
 
+static void DumpStudent(Student* student)
+{
+    printf("name = %s\n", student->name);
+    printf("age = %d\n", student->age);
+    printf("quhao = %s\n", student->phoneNum.quhao);
+    printf("phone = %s\n", student->phoneNum.phone);
+    printf("stress = %d\n", student->address.stress);
+    printf("addressName = %s\n", student->address.addressName);
+}
+
 static void MoveBuffer(Buffer* buffer)
 {
     uint remainLen = BufferReadableCount(buffer);
@@ -46,6 +56,7 @@ static int Process(Buffer* buffer)
             Student student;
             TlvDecode(Student, &student, BufferReadBuf(buffer) + sizeof(TlvHeader), 
                 tlvhdr.totalLen - sizeof(TlvHeader));
+            DumpStudent(&student);
             break;
         default:
             break;
@@ -59,6 +70,12 @@ static int Start()
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         LOG_ERR("socket create");
+        return -1;
+    }
+
+    int reuse = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
+        LOG_ERR("setsockopt");
         return -1;
     }
 
@@ -94,7 +111,7 @@ static int Start()
         }
 
         while (1) {
-            int recvLen = recv(clientfd, buffer.data, BufferReadableCount(&buffer), 0);
+            int recvLen = recv(clientfd, buffer.data, BufferWriteableCount(&buffer), 0);
             if (recvLen <= 0) {
                 close(clientfd);
                 BufferReset(&buffer);
