@@ -1,5 +1,17 @@
-#ifndef _TLV_H
-#define _TLV_H
+#ifndef _TLV2_H_
+#define _TLV2_H_
+
+/**
+ * @file tlv.h
+ * @author your name (you@domain.com)
+ * @brief 和 tlv 对比最主要的区别就是 FieldInfo 添加了 type 类型，反序列化的时候根据 tag 遍历查找 FieldInfo，
+ * 添加了 cmdMask 字段来表示发送方的结构体中哪些字段有效，结构体中支持子结构体数据
+ * @version 0.1
+ * @date 2024-10-08
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 
 #include <inttypes.h>
 
@@ -11,6 +23,7 @@
 
 #define OFFSET(type, field) (uintptr_t)(&(((type*)0)->field))
 #define ARRAY_LEN(array) (sizeof(array) / sizeof(array[0]))
+#define STRUCT_FIELD_SIZE(type, field) sizeof(((type*)0)->field)
 
 #define TlvImport(type) extern FieldInfo type##Info[]
 #define TlvFieldBegin(type) FieldInfo type##Info[] = {
@@ -24,11 +37,22 @@
         .offset = OFFSET(type, fieldName), \
     },
 /**
+ * @brief
+ *
+ */
+#define TlvFieldStruct(type, fieldName, subStructName)                        \
+    {                                                                         \
+        .tag = TAG_STRUCT,                                                    \
+        .offset = OFFSET(type, fieldName),                                    \
+        .fieldInfo = fieldType##Info,                                         \
+        .fieldInfoLen = sizeof(fieldType##Info) / sizeof(fieldType##Info[0]), \
+    },
+/**
  * @brief 结构体字段使用
  * field 结构体字段名称
  * fieldType 结构体字段对应的结构体
  */
-#define TlvFieldStruct(type, fieldName, fieldType)                            \
+#define TlvFieldStructPtr(type, fieldName, fieldType, arrayLenName)                            \
     {                                                                         \
         .tag = TAG_STRUCT,                                                    \
         .offset = OFFSET(type, fieldName),                                    \
@@ -40,7 +64,7 @@
  * field 二进制字段名称
  * fieldLen 二进制字段对应长度字段的名称
  */
-#define TlvFieldBinary(type, fieldName, fieldLenName)  \
+#define TlvFieldBytePtr(type, fieldName, fieldLenName)  \
     {                                                  \
         .tag = TAG_BINARY,                             \
         .offset = OFFSET(type, fieldName),             \
@@ -59,14 +83,14 @@
  */
 typedef enum
 {
-    TAG_STRUCT = 1,
-    TAG_1BYTE,
-    TAG_2BYTE,
-    TAG_4BYTE,
-    TAG_8BYTE,
-    TAG_STRING, // c风格字符串
-    TAG_BINARY, // 二进制数据
-    TAG_MAX,
+    TYPE_STRUCT = 1,
+    TYPE_1BYTE,
+    TYPE_2BYTE,
+    TYPE_4BYTE,
+    TYPE_8BYTE,
+    TYPE_STRING, // c风格字符串
+    TYPE_BINARY, // 二进制数据
+    TYPE_MAX,
 } TagType;
 
 typedef struct 
@@ -80,8 +104,9 @@ typedef struct
 
 /**
  * @brief 结构体中字段描述信息
+ *  cmdMask 标识下面的字段哪个是生效的（bit位标识)，接收端收到后可根据此字段来识别发送端哪些字段是有效的
  *  tag 字段标识
- *  type 字段类型，比如char int等
+ *  type 字段类型，char，int等
  *  len 字段的字节长度，TAG_STRING 和 TAG_BINARY 的是对应的 buffer 的长度
  *  offset 字段在结构中的偏移
  *  binaryLenOffset 如果字段是二进制类型时，二进制类型长度字段在结构体中的偏移
@@ -90,6 +115,7 @@ typedef struct
  */
 typedef struct _FieldInfo
 {
+    uint32_t cmdMask; 
     uint8_t tag;
     uint8_t type;
     uint16_t len;
