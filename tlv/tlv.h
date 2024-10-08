@@ -81,7 +81,6 @@ typedef struct
 /**
  * @brief 结构体中字段描述信息
  *  tag 字段标识
- *  type 字段类型，比如char int等
  *  len 字段的字节长度，TAG_STRING 和 TAG_BINARY 的是对应的 buffer 的长度
  *  offset 字段在结构中的偏移
  *  binaryLenOffset 如果字段是二进制类型时，二进制类型长度字段在结构体中的偏移
@@ -91,7 +90,6 @@ typedef struct
 typedef struct _FieldInfo
 {
     uint8_t tag;
-    uint8_t type;
     uint16_t len;
     uint16_t offset;
     uint16_t binaryLenOffset;

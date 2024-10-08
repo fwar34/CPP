@@ -5,7 +5,8 @@
  * @file tlv.h
  * @author your name (you@domain.com)
  * @brief 和 tlv 对比最主要的区别就是 FieldInfo 添加了 type 类型，反序列化的时候根据 tag 遍历查找 FieldInfo，
- * 添加了 cmdMask 字段来表示发送方的结构体中哪些字段有效，结构体中支持子结构体数据
+ * 添加了 fieldMask 字段来表示发送方的结构体中哪些字段有效，接收方根据 fieldMask 就可以判断发送发哪些字段时有效的，
+ * 结构体中支持子结构体数据
  * @version 0.1
  * @date 2024-10-08
  * 
@@ -21,9 +22,9 @@
 #define TAG_LEN 1
 #define VALUE_LEN_LEN 2
 
-#define OFFSET(type, field) (uintptr_t)(&(((type*)0)->field))
 #define ARRAY_LEN(array) (sizeof(array) / sizeof(array[0]))
-#define STRUCT_FIELD_SIZE(type, field) sizeof(((type*)0)->field)
+#define OFFSET(type, field) (uintptr_t)(&(((type*)0)->field))
+// #define STRUCT_FIELD_SIZE(type, field) sizeof(((type*)0)->field)
 
 #define TlvImport(type) extern FieldInfo type##Info[]
 #define TlvFieldBegin(type) FieldInfo type##Info[] = {
@@ -31,51 +32,93 @@
  * @brief 普通字段使用
  *
  */
-#define TlvField(type, fieldName, tagType) \
-    {                                      \
-        .tag = tagType,                    \
-        .offset = OFFSET(type, fieldName), \
+#define TlvField(tagType, structType, fieldName, fieldType) \
+    {                                                       \
+        .tag = tagType,                                     \
+        .type = fieldType,                                  \
+        .offset = OFFSET(structType, fieldName),            \
     },
 /**
- * @brief
- *
+ * @brief 字段为结构体对象时使用
+ * type 结构体类型
+ * fieldName 字段名称
+ * fieldType 子结构体类型
  */
-#define TlvFieldStruct(type, fieldName, subStructName)                        \
-    {                                                                         \
-        .tag = TAG_STRUCT,                                                    \
-        .offset = OFFSET(type, fieldName),                                    \
-        .fieldInfo = fieldType##Info,                                         \
-        .fieldInfoLen = sizeof(fieldType##Info) / sizeof(fieldType##Info[0]), \
+#define TlvFieldStruct(tagType, structType, fieldName, fieldType) \
+    {                                                             \
+        .tag = tagType,                                           \
+        .type = FIELD_STRUCT,                                     \
+        .offset = OFFSET(structType, fieldName),                  \
+        .fieldInfo = fieldType##Info,                             \
+        .fieldInfoLen = ARRAY_LEN(fieldType##Info),               \
     },
 /**
- * @brief 结构体字段使用
- * field 结构体字段名称
- * fieldType 结构体字段对应的结构体
+ * @brief 字段为结构体数组时使用
+ * type 结构体类型
+ * fieldName 字段名称
+ * fieldType 子结构体类型
  */
-#define TlvFieldStructPtr(type, fieldName, fieldType, arrayLenName)                            \
-    {                                                                         \
-        .tag = TAG_STRUCT,                                                    \
-        .offset = OFFSET(type, fieldName),                                    \
-        .fieldInfo = fieldType##Info,                                         \
-        .fieldInfoLen = sizeof(fieldType##Info) / sizeof(fieldType##Info[0]), \
+#define TlvFieldStructArray(tagType, structType, fieldName, fieldType) \
+    {                                                                  \
+        .tag = tagType,                                                \
+        .type = FIELD_STRUCT_ARRAY,                                    \
+        .offset = OFFSET(structType, fieldName),                       \
+        .fieldInfo = fieldType##Info,                                  \
+        .fieldInfoLen = ARRAY_LEN(fieldType##Info),                    \
     },
 /**
- * @brief 二进制字段使用
+ * @brief 字段为结构体指针时使用
+ * type 结构体类型
+ * fieldName 字段名称
+ * fieldType 子结构体类型
+ * arrayLenName 子结构体数组元素个数字段
+ */
+#define TlvFieldStructPtr(tagType, structType, fieldName, fieldType, fieldLenName) \
+    {                                                                              \
+        .tag = TAG_PRIVATE_ARRAY_LEN,                                              \
+        .type = FIELD_2BYTE,                                                       \
+        .offset = OFFSET(structName, fieldLenName),                                \
+    },                                                                             \
+        {                                                                          \
+            .tag = tagType,                                                        \
+            .type = FIELD_STRUCT_PTR,                                              \
+            .offset = OFFSET(structType, fieldName),                               \
+            .fieldInfo = fieldType##Info,                                          \
+            .fieldInfoLen = ARRAY_LEN(fieldType##Info),                            \
+        },
+/**
+ * @brief 二进制数组字段使用
  * field 二进制字段名称
  * fieldLen 二进制字段对应长度字段的名称
  */
-#define TlvFieldBytePtr(type, fieldName, fieldLenName)  \
-    {                                                  \
-        .tag = TAG_BINARY,                             \
-        .offset = OFFSET(type, fieldName),             \
-        .binaryLenOffset = OFFSET(type, fieldLenName), \
+#define TlvFieldByteArray(tagType, structType, fieldName) \
+    {                                                     \
+        .tag = tagType,                                   \
+        .type = FIELD_BYTE_ARRAY,                         \
+        .offset = OFFSET(structType, fieldName),          \
     },
+/**
+ * @brief 二进制指针字段使用
+ * field 二进制字段名称
+ * fieldLen 二进制字段对应长度字段的名称
+ */
+#define TlvFieldBytePtr(tagType, structType, fieldName, fieldLenName) \
+    {                                                                 \
+        .tag = TAG_PRIVATE_ARRAY_LEN,                                 \
+        .type = FIELD_2BYTE,                                          \
+        .offset = OFFSET(structType, fieldLenName),                   \
+    },                                                                \
+        {                                                             \
+            .tag = tagType,                                           \
+            .type = FIELD_BYTE_PTR,                                   \
+            .offset = OFFSET(structType, fieldName),                  \
+        },
 #define TlvFieldEnd(type) };
 
-#define TlvEncode(type, objAddress, lenAddress) \
-    TlvEncodeImpl(type##Info, ARRAY_LEN(type##Info), (char*)(objAddress), lenAddress)
-#define TlvDecode(type, objAddress, buffer, len) \
-    TlvDecodeImpl(type##Info, ARRAY_LEN(type##Info), (char*)(objAddress), buffer, len)
+#define TlvEncode(structType, objAddress, lenAddress) \
+    TlvEncodeImpl(structType##Info, ARRAY_LEN(structType##Info), (char *)(objAddress), lenAddress)
+#define TlvDecode(structType, objAddress, buffer, len) \
+    TlvDecodeImpl(structType##Info, ARRAY_LEN(structType##Info), (char *)(objAddress), buffer, len)
 
 /**
  * @brief tlv 支持的数据类型
@@ -83,15 +126,28 @@
  */
 typedef enum
 {
-    TYPE_STRUCT = 1,
-    TYPE_1BYTE,
-    TYPE_2BYTE,
-    TYPE_4BYTE,
-    TYPE_8BYTE,
-    TYPE_STRING, // c风格字符串
-    TYPE_BINARY, // 二进制数据
-    TYPE_MAX,
-} TagType;
+    FIELD_STRUCT = 1, // 结构体对象
+    FIELD_STRUCT_ARRAY, // 结构体数组
+    FIELD_STRUCT_PTR, // 结构体指针
+    FIELD_1BYTE,
+    FIELD_2BYTE,
+    FIELD_4BYTE,
+    FIELD_8BYTE,
+    FIELD_STRING, // c风格字符
+    FIELD_BYTE_ARRAY, // char数组
+    FIELD_BYTE_PTR, // 二进制指针
+    FIELD_MAX,
+} FieldType : uint8_t;
+
+/**
+ * @brief tlv tag 内部私有类型，业务不会使用
+ * 
+ */
+typedef enum
+{
+    TAG_PRIVATE_ARRAY_LEN = 200,
+    TAG_PRIVATE_FIELD_MASK = 201,
+} TagType : uint8_t;
 
 typedef struct 
 {
@@ -104,7 +160,7 @@ typedef struct
 
 /**
  * @brief 结构体中字段描述信息
- *  cmdMask 标识下面的字段哪个是生效的（bit位标识)，接收端收到后可根据此字段来识别发送端哪些字段是有效的
+ *  fieldMask 标识下面的字段哪个是生效的（bit位标识)，接收端收到后可根据此字段来识别发送端哪些字段是有效的
  *  tag 字段标识
  *  type 字段类型，char，int等
  *  len 字段的字节长度，TAG_STRING 和 TAG_BINARY 的是对应的 buffer 的长度
@@ -115,12 +171,12 @@ typedef struct
  */
 typedef struct _FieldInfo
 {
-    uint32_t cmdMask; 
+    uint32_t fieldMask; 
     uint8_t tag;
     uint8_t type;
     uint16_t len;
     uint16_t offset;
-    uint16_t binaryLenOffset;
+    // uint16_t binaryLenOffset;
     struct _FieldInfo* fieldInfo;
     uint16_t fieldInfoLen;
 } FieldInfo;
