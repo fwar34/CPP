@@ -20,14 +20,15 @@
 #define MSG_CMD 1
 
 #define TAG_LEN 1
+#define TYPE_LEN 1
 #define VALUE_LEN_LEN 2
 
-#define ARRAY_LEN(array) (sizeof(array) / sizeof(array[0]))
-#define OFFSET(type, field) (uintptr_t)(&(((type*)0)->field))
-// #define STRUCT_FIELD_SIZE(type, field) sizeof(((type*)0)->field)
+#define ARRAY_LEN(arrayName) (sizeof(arrayName) / sizeof(arrayName[0]))
+#define OFFSET(structType, field) (uintptr_t)(&(((structType*)0)->field))
+// #define STRUCT_FIELD_SIZE(structType, field) sizeof(((structType*)0)->field)
 
-#define TlvImport(type) extern FieldInfo type##Info[]
-#define TlvFieldBegin(type) FieldInfo type##Info[] = {
+#define TlvImport(structType) extern FieldInfo structType##Info[]
+#define TlvFieldBegin(structType) FieldInfo structType##Info[] = {
 /**
  * @brief 普通字段使用
  *
@@ -79,13 +80,13 @@
         .type = FIELD_2BYTE,                                                       \
         .offset = OFFSET(structName, fieldLenName),                                \
     },                                                                             \
-        {                                                                          \
-            .tag = tagType,                                                        \
-            .type = FIELD_STRUCT_PTR,                                              \
-            .offset = OFFSET(structType, fieldName),                               \
-            .fieldInfo = fieldType##Info,                                          \
-            .fieldInfoLen = ARRAY_LEN(fieldType##Info),                            \
-        },
+    {                                                                              \
+        .tag = tagType,                                                            \
+        .type = FIELD_STRUCT_PTR,                                                  \
+        .offset = OFFSET(structType, fieldName),                                   \
+        .fieldInfo = fieldType##Info,                                              \
+        .fieldInfoLen = ARRAY_LEN(fieldType##Info),                                \
+    },
 /**
  * @brief 二进制数组字段使用
  * field 二进制字段名称
@@ -108,11 +109,11 @@
         .type = FIELD_2BYTE,                                          \
         .offset = OFFSET(structType, fieldLenName),                   \
     },                                                                \
-        {                                                             \
-            .tag = tagType,                                           \
-            .type = FIELD_BYTE_PTR,                                   \
-            .offset = OFFSET(structType, fieldName),                  \
-        },
+    {                                                                 \
+        .tag = tagType,                                               \
+        .type = FIELD_BYTE_PTR,                                       \
+        .offset = OFFSET(structType, fieldName),                      \
+    },
 #define TlvFieldEnd(type) };
 
 #define TlvEncode(structType, objAddress, lenAddress) \
@@ -120,24 +121,24 @@
 #define TlvDecode(structType, objAddress, buffer, len) \
     TlvDecodeImpl(structType##Info, ARRAY_LEN(structType##Info), (char *)(objAddress), buffer, len)
 
-/**
- * @brief tlv 支持的数据类型
- * 
- */
-typedef enum
-{
-    FIELD_STRUCT = 1, // 结构体对象
-    FIELD_STRUCT_ARRAY, // 结构体数组
-    FIELD_STRUCT_PTR, // 结构体指针
-    FIELD_1BYTE,
-    FIELD_2BYTE,
-    FIELD_4BYTE,
-    FIELD_8BYTE,
-    FIELD_STRING, // c风格字符
-    FIELD_BYTE_ARRAY, // char数组
-    FIELD_BYTE_PTR, // 二进制指针
-    FIELD_MAX,
-} FieldType : uint8_t;
+    /**
+     * @brief tlv 支持的数据类型
+     *
+     */
+    typedef enum {
+        FIELD_STRUCT = 1,   // 结构体对象
+        FIELD_STRUCT_ARRAY, // 结构体数组
+        FIELD_STRUCT_PTR,   // 结构体指针
+        FIELD_1BYTE,
+        FIELD_2BYTE,
+        FIELD_4BYTE,
+        FIELD_8BYTE,
+        FIELD_STRING,     // c风格字符
+        FIELD_BYTE_ARRAY, // char数组
+        FIELD_BYTE_PTR,   // 二进制指针
+        FIELD_LINKED_PTR, // 链表指针
+        FIELD_MAX,
+    } FieldType : uint8_t;
 
 /**
  * @brief tlv tag 内部私有类型，业务不会使用
@@ -147,7 +148,7 @@ typedef enum
 {
     TAG_PRIVATE_ARRAY_LEN = 200,
     TAG_PRIVATE_FIELD_MASK = 201,
-} TagType : uint8_t;
+} TagPrivateType : uint8_t;
 
 typedef struct 
 {
@@ -171,7 +172,7 @@ typedef struct
  */
 typedef struct _FieldInfo
 {
-    uint32_t fieldMask; 
+    // uint32_t fieldMask; 
     uint8_t tag;
     uint8_t type;
     uint16_t len;

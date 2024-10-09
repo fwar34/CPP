@@ -10,9 +10,15 @@ typedef struct
 } PhoneNum;
 
 #if 1
+typedef enum
+{
+    TAG_QUHAO,
+    TAG_PHONE,
+} TagPhoneNum : uint8_t;
+
 TlvFieldBegin(PhoneNum)
-TlvField(PhoneNum, quhao, TAG_STRING)
-TlvField(PhoneNum, phone, TAG_STRING)
+TlvField(TAG_QUHAO, PhoneNum, quhao, FIELD_STRING)
+TlvField(TAG_PHONE, PhoneNum, phone, FIELD_STRING)
 TlvFieldEnd(PhoneNum)
 #else
 FieldInfo PhoneNumInfo[2] =
@@ -35,9 +41,15 @@ typedef struct
 } Address;
 
 #if 1
+typedef enum
+{
+    TAG_STRESS,
+    TAG_ADDRESS_NAME,
+} TagAddress : uint8_t;
+
 TlvFieldBegin(Address)
-TlvField(Address, stress, TAG_4BYTE)
-TlvField(Address, addressName, TAG_STRING)
+TlvField(TAG_STRESS, Address, stress, FIELD_4BYTE)
+TlvField(TAG_ADDRESS_NAME, Address, addressName, FIELD_STRING)
 TlvFieldEnd(Address)
 #else
 FieldInfo AddressInfo[2] =
@@ -55,10 +67,10 @@ FieldInfo AddressInfo[2] =
 
 typedef struct
 {
+    uint32_t fieldMask;
     char* name;
     uint32_t age;
-    PhoneNum phoneNum; // 结构体嵌套只接受组合的类型，不支持下面的 PhoneNum*
-    // PhoneNum* phoneNum;
+    PhoneNum phoneNum;
     Address* address;
     uint16_t addressLen; // address数组元素个数
     char* data;
@@ -66,13 +78,24 @@ typedef struct
 } Student;
 
 #if 1
+typedef enum
+{
+    TAG_FIELD_MASK,
+    TAG_NAME,
+    TAG_AGE,
+    TAG_PHONENUM,
+    TAG_ADDRESS,
+    TAG_ADDRESSLEN,
+    TAG_DATA,
+    TAG_DATALEN,
+} TagStudent : uint8_t;
+
 TlvFieldBegin(Student)
-TlvField(Student, name, TAG_STRING)
-TlvField(Student, age, TAG_4BYTE)
-TlvFieldStruct(Student, phoneNum, PhoneNum)
-TlvFieldStruct(Student, address, Address)
-TlvFieldBinary(Student, data, dataLen)
-TlvField(Student, dataLen, TAG_2BYTE)
+TlvField(TAG_NAME, Student, name, FIELD_STRING)
+TlvField(TAG_AGE, Student, age, FIELD_4BYTE)
+TlvFieldStruct(TAG_PHONENUM, Student, phoneNum, PhoneNum)
+TlvFieldStructPtr(TAG_ADDRESS, Student, address, Address, addressLen)
+TlvFieldBytePtr(TAG_DATA, Student, data, dataLen)
 TlvFieldEnd(Student)
 #else
 FieldInfo StudentInfo[] = 
@@ -107,8 +130,8 @@ typedef struct
 } Test;
 
 TlvFieldBegin(Test)
-TlvField(Test, a, TAG_4BYTE)
-TlvField(Test, b, TAG_2BYTE)
+TlvField(Test, a, FIELD_4BYTE)
+TlvField(Test, b, FIELD_2BYTE)
 TlvFieldEnd(Test)
 
 #endif

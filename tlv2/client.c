@@ -51,8 +51,10 @@ static void TestStudent()
     Student xiaoming;
     xiaoming.age = 16;
     xiaoming.name = "xiaoming";
-    xiaoming.address.addressName = "china";
-    xiaoming.address.stress = 99;
+    Address addr;
+    addr.stress = 99;
+    addr.addressName = "china";
+    xiaoming.address = &addr;
     xiaoming.phoneNum.quhao = "123";
     xiaoming.phoneNum.phone = "189723i4u9234";
     xiaoming.data = (char*)malloc(999);

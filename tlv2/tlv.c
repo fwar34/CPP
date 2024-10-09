@@ -10,7 +10,7 @@ uint16_t GetSructLen(FieldInfo* info, uint16_t infoLen, char* objAddress)
     uint16_t len = 0;
     for (int i = 0; i < infoLen; ++i) {
         uint16_t binaryLen = 0;
-        if (info[i].tag == TAG_BINARY) {
+        if (info[i].tag == FIELD_BYTE_PTR) {
             binaryLen = *(uint16_t*)(objAddress + info[i].binaryLenOffset);
         }
         len += GetFieldLen(&info[i], objAddress + info[i].offset, binaryLen);
@@ -23,30 +23,42 @@ uint16_t GetFieldLen(FieldInfo* info, char* fieldAddress, uint16_t binaryLen)
 {
     // 此函数会给每个字段的 FieldInfo 中的 len 设置上实例 filedAddress 对应字段的大小，
     // 在 Encode 函数中会直接使用此处赋值的 len
-    // (TAG_STRING 和 TAG_BINARY 的 len 设置的是对应 buffer 的长度)
+    // (FIELD_STRING 和 TAG_BINARY 的 len 设置的是对应 buffer 的长度)
     switch (info->tag)
     {
-    case TAG_STRUCT: // 字段为一个结构体
+    case FIELD_STRUCT: // 字段为一个结构体
         info->len = GetSructLen(info->fieldInfo, info->fieldInfoLen, fieldAddress);
         break;
-    case TAG_1BYTE:
+    case FIELD_STRUCT_ARRAY:
+        // TODO
+        break;
+    case FIELD_STRUCT_PTR:
+        // TODO
+        break;
+    case FIELD_1BYTE:
         info->len = sizeof(uint8_t);
         break;
-    case TAG_2BYTE:
+    case FIELD_2BYTE:
         info->len = sizeof(uint16_t);
         break;
-    case TAG_4BYTE:
+    case FIELD_4BYTE:
         info->len = sizeof(uint32_t);
         break;
-    case TAG_8BYTE:
+    case FIELD_8BYTE:
         info->len = sizeof(uint64_t);
         break;
-    case TAG_STRING:
+    case FIELD_STRING:
         uint16_t len = strlen(*(char**)fieldAddress);
         info->len = len ? len + 1 : 0;
         break;
-    case TAG_BINARY:
+    case FIELD_BYTE_ARRAY:
+        // TODO
+        break;
+    case FIELD_BYTE_PTR:
         info->len = binaryLen;
+        break;
+    case FIELD_LINKED_PTR:
+        // TODO
         break;
     default:
         printf("GetFieldLen file(%s) line(%d) tag(%d)", __FILE__, __LINE__, info->tag);
@@ -69,32 +81,32 @@ uint16_t EncodeField(FieldInfo* info, char* fieldAddress, char* out)
     len = sizeof(uint8_t) + sizeof(uint16_t); // tag+len 长度
     switch (info->tag) // value
     {
-    case TAG_STRUCT: // 当前字段为一个结构体
+    case FIELD_STRUCT: // 当前字段为一个结构体
         len += EncodeStruct(info->fieldInfo, info->fieldInfoLen, fieldAddress, out);
         break;
-    case TAG_1BYTE:
+    case FIELD_1BYTE:
         memcpy(out, fieldAddress, sizeof(uint8_t));
         len += sizeof(uint8_t);
         break;
-    case TAG_2BYTE:
+    case FIELD_2BYTE:
         uint16_t dataShort = htons(*(uint16_t*)fieldAddress);
         memcpy(out, &dataShort, sizeof(uint16_t));
         len += sizeof(uint16_t); // value 长度
         break;
-    case TAG_4BYTE:
+    case FIELD_4BYTE:
         uint32_t dataInt = htonl(*(uint32_t*)fieldAddress);
         memcpy(out, &dataInt, sizeof(uint32_t));
         len += sizeof(uint32_t);
         break;
-    case TAG_8BYTE:
+    case FIELD_8BYTE:
         // 大端转小端
         for (uint8_t i = 0; i < 8; ++i) {
             out[i] = fieldAddress[8 - i - 1];
         }
         len += sizeof(uint64_t);
         break;
-    case TAG_STRING:
-    case TAG_BINARY:
+    case FIELD_STRING:
+    case FIELD_BINARY:
         memcpy(out, *(char**)fieldAddress, info->len);
         len += info->len;
         break;
@@ -158,20 +170,20 @@ int DecodeField(FieldInfo* info, char* fieldAddress, char* buffer, uint32_t len)
 
     switch (tag)
     {
-    case TAG_STRUCT:
+    case FIELD_STRUCT:
         DecodeStruct(info->fieldInfo, info->fieldInfoLen, fieldAddress, buffer, valueLen);
         break;
-    case TAG_1BYTE:
-    case TAG_2BYTE:
-    case TAG_4BYTE:
-    case TAG_8BYTE:
+    case FIELD_1BYTE:
+    case FIELD_2BYTE:
+    case FIELD_4BYTE:
+    case FIELD_8BYTE:
         for (int i = 0; i < valueLen; ++i) {
             fieldAddress[i] = buffer[valueLen - i - 1];
         }
         // memcpy(fieldAddress, buffer, valueLen);
         break;
-    case TAG_STRING:
-    case TAG_BINARY:
+    case FIELD_STRING:
+    case FIELD_BYTE_PTR:
         char *str = (char *)malloc(valueLen);
         memcpy(str, buffer, valueLen);
         // *(char **)fieldAddress = str;
@@ -195,7 +207,7 @@ int DecodeStruct(FieldInfo* info, uint16_t infoLen, char* objAddress, char* buff
             break;
         }
         pInfo = &info[infoIndex++];
-        valueLen = ntohs(*(uint16_t*)(tmp + TAG_LEN));
+        valueLen = ntohs(*(uint16_t*)(tmp + FIELD_LEN));
         // objAddress + pInfo->offset 依据字段在结构体中的偏移来设置字段值
         DecodeField(pInfo, objAddress + pInfo->offset, tmp, TAG_LEN + VALUE_LEN_LEN + valueLen);
     }
