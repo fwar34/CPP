@@ -65,6 +65,7 @@ FieldInfo AddressInfo[2] =
 };
 #endif
 
+ // fieldMask 标识下面的字段哪个是生效的（bit位标识)，接收端收到后可根据此字段来识别发送端哪些字段是有效的
 typedef struct
 {
     uint32_t fieldMask;

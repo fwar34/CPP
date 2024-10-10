@@ -9,18 +9,15 @@ uint16_t GetSructLen(FieldInfo* info, uint16_t infoLen, char* objAddress)
 {
     uint16_t len = 0;
     for (int i = 0; i < infoLen; ++i) {
-        uint16_t binaryLen = 0;
-        if (info[i].tag == FIELD_BYTE_PTR) {
-            binaryLen = *(uint16_t*)(objAddress + info[i].binaryLenOffset);
-        }
-        len += GetFieldLen(&info[i], objAddress + info[i].offset, binaryLen);
+        len += GetFieldLen(&info[i], objAddress + info[i].offset);
     }
 
     return len;
 }
 
-uint16_t GetFieldLen(FieldInfo* info, char* fieldAddress, uint16_t binaryLen)
+uint16_t GetFieldLen(FieldInfo* info, char* fieldAddress)
 {
+    FieldInfo* prev = NULL;
     // 此函数会给每个字段的 FieldInfo 中的 len 设置上实例 filedAddress 对应字段的大小，
     // 在 Encode 函数中会直接使用此处赋值的 len
     // (FIELD_STRING 和 TAG_BINARY 的 len 设置的是对应 buffer 的长度)
@@ -30,10 +27,18 @@ uint16_t GetFieldLen(FieldInfo* info, char* fieldAddress, uint16_t binaryLen)
         info->len = GetSructLen(info->fieldInfo, info->fieldInfoLen, fieldAddress);
         break;
     case FIELD_STRUCT_ARRAY:
-        // TODO
+        prev = info - 1; // 宏定义保证-1位置存在FieldInfo
+        for (int i = 0; i < prev->len; ++i) { // prev->len 是数组的元素个数, prev->type 是数组单个元素字节大小
+            info->len += GetSructLen(info->fieldInfo, info->fieldInfoLen, fieldAddress + prev->type * i);
+        }
         break;
     case FIELD_STRUCT_PTR:
-        // TODO
+        prev = info - 1;
+        uint16_t arrayLen = *(uint16_t*)(prev->offset);
+        for (int i = 0; i < arrayLen; ++i) {
+            info->len += GetSructLen(info->fieldInfo, info->fieldInfoLen, 
+                *(char**)fieldAddress + prev->type * i);
+        }
         break;
     case FIELD_1BYTE:
         info->len = sizeof(uint8_t);
@@ -52,10 +57,12 @@ uint16_t GetFieldLen(FieldInfo* info, char* fieldAddress, uint16_t binaryLen)
         info->len = len ? len + 1 : 0;
         break;
     case FIELD_BYTE_ARRAY:
-        // TODO
+        prev = info - 1;
+        info->len = prev->len;
         break;
     case FIELD_BYTE_PTR:
-        info->len = binaryLen;
+        prev = info - 1;
+        info->len = *(uint16_t*)(prev->offset);
         break;
     case FIELD_LINKED_PTR:
         // TODO
