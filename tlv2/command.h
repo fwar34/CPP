@@ -1,6 +1,18 @@
 #ifndef __COMMAND_H_
 #define __COMMAND_H_
 
+/**
+ * @file command.h
+ * @author your name (you@domain.com)
+ * @brief 添加了 fieldMask 字段来表示发送方的结构体中哪些字段有效，接收方根据 fieldMask 
+ * 就可以判断发送发哪些字段时有效的，结构体中支持子结构体数据
+ * @version 0.1
+ * @date 2024-10-11
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
 #include "tlv.h"
 
 typedef struct

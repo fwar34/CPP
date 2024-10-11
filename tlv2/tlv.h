@@ -5,8 +5,6 @@
  * @file tlv.h
  * @author your name (you@domain.com)
  * @brief 和 tlv 对比最主要的区别就是 FieldInfo 添加了 type 类型，反序列化的时候根据 tag 遍历查找 FieldInfo，
- * 添加了 fieldMask 字段来表示发送方的结构体中哪些字段有效，接收方根据 fieldMask 就可以判断发送发哪些字段时有效的，
- * 结构体中支持子结构体数据
  * @version 0.1
  * @date 2024-10-08
  * 
@@ -20,7 +18,6 @@
 #define MSG_CMD 1
 
 #define TAG_LEN 1
-#define TYPE_LEN 1
 #define VALUE_LEN_LEN 2
 
 #define ARRAY_LEN(arrayName) (sizeof(arrayName) / sizeof(arrayName[0]))
