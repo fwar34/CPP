@@ -229,7 +229,8 @@ int DecodeField(FieldInfo* info, char* fieldAddress, char* buffer, uint32_t len)
         arrayLen = *(uint16_t*)(objAddress + prev->type);
         char* tmp = (char*)malloc(prev->type * arrayLen);
         for (int i = 0; i < arrayLen; ++i) {
-            DecodeStruct(info->fieldInfo, info->fieldInfoLen, fieldAddress + )
+            DecodeStruct(info->fieldInfo, info->fieldInfoLen, 
+                fieldAddress + prev->type * i, buffer + i * prev->type, );
         }
         // TODO
         break;

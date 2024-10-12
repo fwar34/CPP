@@ -22,7 +22,7 @@
 
 #define ARRAY_LEN(arrayName) (sizeof(arrayName) / sizeof(arrayName[0]))
 #define OFFSET(structType, field) (uintptr_t)(&(((structType*)0)->field))
-// #define STRUCT_FIELD_SIZE(structType, field) sizeof(((structType*)0)->field)
+#define STRUCT_FIELD_SIZE(structType, field) sizeof(((structType*)0)->field)
 
 #define TlvImport(structType) extern FieldInfo structType##Info[]
 #define TlvFieldBegin(structType) FieldInfo structType##Info[] = {
@@ -60,8 +60,8 @@
 #define TlvFieldStructArray(tagType, structType, fieldName, fieldType) \
     {                                                                  \
         .tag = TAG_PRIVATE_ARRAY_LEN,                                  \
-        .len = ARRAY_LEN(fieldName),                                   \ // 数组元素个数
-        .type = sizeof(fieldType),                                     \ // 数组单个元素字节大小
+        .type = ARRAY_LEN(fieldName),                                  \ // 数组元素个数
+        .len = sizeof(fieldType),                                      \ // 数组单个元素字节大小
     },                                                                 \
     {                                                                  \
         .tag = tagType,                                                \
@@ -77,18 +77,19 @@
  * fieldType 子结构体类型
  * arrayLenName 子结构体数组元素个数字段
  */
-#define TlvFieldStructPtr(tagType, structType, fieldName, fieldType, fieldLenName) \
-    {                                                                              \
-        .tag = TAG_PRIVATE_ARRAY_LEN,                                              \
-        .type = sizeof(fieldType),                                                 \ // 数组单个元素字节大小
-        .offset = OFFSET(structName, fieldLenName),                                \
-    },                                                                             \
-    {                                                                              \
-        .tag = tagType,                                                            \
-        .type = FIELD_STRUCT_PTR,                                                  \
-        .offset = OFFSET(structType, fieldName),                                   \
-        .fieldInfo = fieldType##Info,                                              \
-        .fieldInfoLen = ARRAY_LEN(fieldType##Info),                                \
+#define TlvFieldStructPtr(tagType, structType, fieldName, fieldType, fieldLenName, fieldLenTagType) \
+    {                                                                           \
+        .tag = fieldLenTagType,                                                 \
+        .type = FIELD_2BYTE,                                                    \
+        .len = sizeof(fieldType),                                               \ // 数组单个元素字节大小
+        .offset = OFFSET(structName, fieldLenName),                             \
+    },                                                                          \
+    {                                                                           \
+        .tag = tagType,                                                         \
+        .type = FIELD_STRUCT_PTR,                                               \
+        .offset = OFFSET(structType, fieldName),                                \
+        .fieldInfo = fieldType##Info,                                           \
+        .fieldInfoLen = ARRAY_LEN(fieldType##Info),                             \
     },
 /**
  * @brief 二进制数组字段使用
@@ -98,8 +99,8 @@
 #define TlvFieldByteArray(tagType, structType, fieldName) \
     {                                                     \
         .tag = TAG_PRIVATE_ARRAY_LEN,                     \
-        .len = ARRAY_LEN(fieldName),                      \ // 数组元素个数
-        .type = sizeof(fieldName[0]),                     \ // 数组单个元素字节大小
+        .type = ARRAY_LEN(fieldName),                     \ // 数组元素个数
+        .len = sizeof(fieldName[0]),                      \ // 数组单个元素字节大小
     },                                                    \
     {                                                     \
         .tag = tagType,                                   \
@@ -108,19 +109,22 @@
     },
 /**
  * @brief 二进制指针字段使用
- * field 二进制字段名称
- * fieldLen 二进制字段对应长度字段的名称
+ * tagType char指针字段的 tag
+ * structType 结构体类型
+ * fieldName 二进制字段名称
+ * fieldLenName 二进制字段对应长度字段的名称
+ * fieldLenTagType char指针指向的 buffer 长度字段的 tag
  */
-#define TlvFieldBytePtr(tagType, structType, fieldName, fieldLenName) \
-    {                                                                 \
-        .tag = TAG_PRIVATE_ARRAY_LEN,                                 \
-        .type = sizeof(fieldName[0]),                                 \
-        .offset = OFFSET(structType, fieldLenName),                   \
-    },                                                                \
-    {                                                                 \
-        .tag = tagType,                                               \
-        .type = FIELD_BYTE_PTR,                                       \
-        .offset = OFFSET(structType, fieldName),                      \
+#define TlvFieldBytePtr(tagType, structType, fieldName, fieldLenName, fieldLenTagType) \
+    {                                                                                  \
+        .tag = fieldLenTagType,                                                        \
+        .type = sizeof(fieldName[0]),                                                  \
+        .offset = OFFSET(structType, fieldLenName),                                    \
+    },                                                                                 \
+    {                                                                                  \
+        .tag = tagType,                                                                \
+        .type = FIELD_BYTE_PTR,                                                        \
+        .offset = OFFSET(structType, fieldName),                                       \
     },
 #define TlvFieldEnd(type) };
 
