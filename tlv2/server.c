@@ -15,8 +15,9 @@ static void DumpStudent(Student* student)
     printf("age = %d\n", student->age);
     printf("quhao = %s\n", student->phoneNum.quhao);
     printf("phone = %s\n", student->phoneNum.phone);
-    printf("stress = %d\n", student->address.stress);
-    printf("addressName = %s\n", student->address.addressName);
+    printf("address num = %d\n", student->addressLen);
+    // printf("stress = %d\n", student->address.stress);
+    // printf("addressName = %s\n", student->address.addressName);
     FILE* file = fopen("./out.bin", "wb+");
     if (!file) {
         LOG_ERR("fopen ./out.bin");
@@ -41,9 +42,9 @@ static void FreeStudent(Student* student)
         free(student->phoneNum.phone);
     }
 
-    if (student->address.addressName) {
-        free(student->address.addressName);
-    }
+    // if (student->address.addressName) {
+    //     free(student->address.addressName);
+    // }
 }
 
 static void MoveBuffer(Buffer* buffer)

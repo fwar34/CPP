@@ -29,8 +29,8 @@ typedef enum
 } TagPhoneNum : uint8_t;
 
 TlvFieldBegin(PhoneNum)
-TlvField(TAG_QUHAO, PhoneNum, quhao, FIELD_STRING)
-TlvField(TAG_PHONE, PhoneNum, phone, FIELD_STRING)
+TlvField(TAG_QUHAO, PhoneNum, quhao, FIELD_TYPE_STRING)
+TlvField(TAG_PHONE, PhoneNum, phone, FIELD_TYPE_STRING)
 TlvFieldEnd(PhoneNum)
 #else
 FieldInfo PhoneNumInfo[2] =
@@ -60,8 +60,8 @@ typedef enum
 } TagAddress : uint8_t;
 
 TlvFieldBegin(Address)
-TlvField(TAG_STRESS, Address, stress, FIELD_4BYTE)
-TlvField(TAG_ADDRESS_NAME, Address, addressName, FIELD_STRING)
+TlvField(TAG_STRESS, Address, stress, FIELD_TYPE_4BYTE)
+TlvField(TAG_ADDRESS_NAME, Address, addressName, FIELD_TYPE_STRING)
 TlvFieldEnd(Address)
 #else
 FieldInfo AddressInfo[2] =
@@ -87,13 +87,13 @@ typedef struct
     Address* address;
     uint16_t addressLen; // address数组元素个数
     char* data;
-    uint16_t dataLen;
+    uint32_t dataLen;
 } Student;
 
 #if 1
 typedef enum
 {
-    TAG_FIELD_MASK,
+    TAG_FIELD_TYPE_MASK,
     TAG_NAME,
     TAG_AGE,
     TAG_PHONENUM,
@@ -104,11 +104,11 @@ typedef enum
 } TagStudent : uint8_t;
 
 TlvFieldBegin(Student)
-TlvField(TAG_NAME, Student, name, FIELD_STRING)
-TlvField(TAG_AGE, Student, age, FIELD_4BYTE)
+TlvField(TAG_NAME, Student, name, FIELD_TYPE_STRING)
+TlvField(TAG_AGE, Student, age, FIELD_TYPE_4BYTE)
 TlvFieldStruct(TAG_PHONENUM, Student, phoneNum, PhoneNum)
-TlvFieldStructPtr(TAG_ADDRESS, Student, address, Address, addressLen)
-TlvFieldBytePtr(TAG_DATA, Student, data, dataLen)
+TlvFieldStructPtr(TAG_ADDRESS, Student, address, Address, addressLen, TAG_ADDRESS_NAME, FIELD_TYPE_2BYTE)
+TlvFieldBytePtr(TAG_DATA, Student, data, dataLen, TAG_DATALEN, FIELD_TYPE_4BYTE)
 TlvFieldEnd(Student)
 #else
 FieldInfo StudentInfo[] = 
@@ -143,8 +143,8 @@ typedef struct
 } Test;
 
 TlvFieldBegin(Test)
-TlvField(Test, a, FIELD_4BYTE)
-TlvField(Test, b, FIELD_2BYTE)
+TlvField(Test, a, FIELD_TYPE_4BYTE)
+TlvField(Test, b, FIELD_TYPE_2BYTE)
 TlvFieldEnd(Test)
 
 #endif
