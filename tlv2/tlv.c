@@ -4,6 +4,20 @@
 #include <string.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <stdbool.h>
+
+static bool IsNeedEncode(uint8_t tag)
+{
+    switch (tag)
+    {
+    case TAG_PRIVATE_ARRAY_LEN:
+    case TAG_PRIVATE_FIELD_MASK:
+    case TAG_PRIVATE_SIZEOF:
+        return false;
+    default:
+        return true;
+    }
+}
 
 uint16_t GetStructTlvLen(FieldInfo* info, uint16_t infoLen, char* objAddress)
 {
@@ -31,6 +45,7 @@ uint16_t GetFieldTlvLen(FieldInfo* info, char* fieldAddress)
         len += GetStructTlvLen(info->fieldInfo, info->fieldInfoLen, fieldAddress);
         break;
     case FIELD_TYPE_STRUCT_ARRAY:
+    {
         prev = info - 1; // 宏定义保证-1位置存在 FieldInfo
         arrayLen = info->len / prev->len;
         for (int i = 0; i < arrayLen; ++i) { // prev->len 是数组单个元素字节大小
@@ -38,10 +53,13 @@ uint16_t GetFieldTlvLen(FieldInfo* info, char* fieldAddress)
                 fieldAddress + prev->len * i);
         }
         break;
+    }
     case FIELD_TYPE_STRUCT_PTR:
+    {
         objAddress = fieldAddress - info->offset; // 根据字段的偏移计算出来实例的起始地址
         prev = info - 1;
-        char bufLen2[prev->len] = {0};
+        char bufLen2[prev->len];
+        memset(bufLen2, 0, prev->len);
         memcpy(bufLen2, objAddress + prev->offset, prev->len);
         ConvertBuf2Len(arrayLen, bufLen2, prev->len);
         for (int i = 0; i < arrayLen; ++i) {
@@ -49,6 +67,7 @@ uint16_t GetFieldTlvLen(FieldInfo* info, char* fieldAddress)
                 *(char**)fieldAddress + info->len * i);
         }
         break;
+    }
     case FIELD_TYPE_1BYTE:
     case FIELD_TYPE_2BYTE:
     case FIELD_TYPE_4BYTE:
@@ -64,13 +83,16 @@ uint16_t GetFieldTlvLen(FieldInfo* info, char* fieldAddress)
         len += strlen(*(char**)fieldAddress) + 1;
         break;
     case FIELD_TYPE_BYTE_PTR:
+    {
         objAddress = fieldAddress - info->offset;
         prev = info - 1;
-        char lenBuf[prev->len] = {0};
+        char lenBuf[prev->len];
+        memset(lenBuf, 0, prev->len);
         memcpy(lenBuf, objAddress + prev->offset, prev->len);
         ConvertBuf2Len(arrayLen, lenBuf, prev->len);
         len += arrayLen;
         break;
+    }
     case FIELD_TYPE_LINKED_PTR:
         // TODO
         break;
@@ -122,6 +144,7 @@ uint16_t EncodeFieldTlv(FieldInfo* info, char* fieldAddress, char* out)
         len += EncodeStructTlv(info->fieldInfo, info->fieldInfoLen, fieldAddress, out);
         break;
     case FIELD_TYPE_STRUCT_ARRAY:
+    {
         prev = info - 1;
         arrayLen = info->len / prev->len;
         for (int i = 0; i < arrayLen; ++i) {
@@ -131,10 +154,13 @@ uint16_t EncodeFieldTlv(FieldInfo* info, char* fieldAddress, char* out)
             len += encodeLen;
         }
         break;
+    }
     case FIELD_TYPE_STRUCT_PTR:
+    {
         prev = info - 1;
         objAddress = fieldAddress - info->offset;
-        char lenBuf[prev->len] = {0};
+        char lenBuf[prev->len];
+        memset(lenBuf, 0, prev->len);
         memcpy(lenBuf, objAddress + prev->offset, prev->len);
         ConvertBuf2Len(arrayLen, lenBuf, prev->len);
         for (int i = 0; i < arrayLen; ++i) {
@@ -144,6 +170,7 @@ uint16_t EncodeFieldTlv(FieldInfo* info, char* fieldAddress, char* out)
             len += encodeLen;
         }
         break;
+    }
     case FIELD_TYPE_1BYTE:
     case FIELD_TYPE_2BYTE:
     case FIELD_TYPE_4BYTE:
@@ -152,21 +179,26 @@ uint16_t EncodeFieldTlv(FieldInfo* info, char* fieldAddress, char* out)
         len += info->len;
         break;
     case FIELD_TYPE_STRING:
+    {
         char* str = *(char**)fieldAddress;
         if (!str) {
             break;
         }
         memcpy(out, *(char **)fieldAddress, strlen(str) + 1);
         break;
+    }
     case FIELD_TYPE_BYTE_PTR:
+    {
         prev = info - 1;
         objAddress = fieldAddress - info->offset;
-        char lenBuf[prev->len] = {0};
+        char lenBuf[prev->len];
+        memset(lenBuf, 0, prev->len);
         memcpy(lenBuf, objAddress + prev->offset, prev->len);
         ConvertBuf2Len(arrayLen, lenBuf, prev->len);
         memcpy(out, *(char**)fieldAddress, arrayLen);
         len += arrayLen;
         break;
+    }
     case FIELD_TYPE_BYTE_ARRAY:
         memcpy(out, fieldAddress, info->len);
         len += info->len;
@@ -177,22 +209,9 @@ uint16_t EncodeFieldTlv(FieldInfo* info, char* fieldAddress, char* out)
     }
 
     memcpy(origBuf, &info->tag, TAG_LEN); // tag
-    BufferChangeEndianCopy(out + TAG_LEN, (char*)&len, VALUE_LEN_LEN)
+    BufferChangeEndianCopy(out + TAG_LEN, (char*)&len, VALUE_LEN_LEN);
 
     return len;
-}
-
-static bool IsNeedEncode(uint8_t tag)
-{
-    switch (tag)
-    {
-    case TAG_PRIVATE_ARRAY_LEN:
-    case TAG_PRIVATE_FIELD_MASK:
-    case TAG_PRIVATE_SIZEOF:
-        return false;
-    default:
-        return true;
-    }
 }
 
 uint16_t EncodeStructTlv(FieldInfo* info, uint16_t infoLen, char* objAddress, char* out)

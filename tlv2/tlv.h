@@ -93,7 +93,7 @@
         .type = fieldLenType,                                          \
         /* len: ptr 长度字段的字节大小 */                                \
         .len = STRUCT_FIELD_SIZE(structType, fieldLenName),            \
-        .offset = OFFSET(structName, fieldLenName),                    \
+        .offset = OFFSET(structType, fieldLenName),                    \
     },                                                                 \
     {                                                                  \
         .tag = tagType,                                                \
@@ -114,7 +114,7 @@
         .tag = tagType,                                   \
         .type = FIELD_TYPE_BYTE_ARRAY,                    \
         /* len: 数组的总字节大小 */                        \
-        .len = STRUCT_FIELD_SIZE(structName, fieldName),  \
+        .len = STRUCT_FIELD_SIZE(structType, fieldName),  \
         .offset = OFFSET(structType, fieldName),          \
     },
 /**
@@ -192,7 +192,7 @@
         FIELD_TYPE_BYTE_PTR,   // 二进制指针
         FIELD_TYPE_LINKED_PTR, // 链表指针
         FIELD_TYPE_MAX,
-    } FieldType : uint8_t;
+    } FieldType;
 
 /**
  * @brief tlv tag 内部私有类型，业务不会使用
@@ -202,7 +202,7 @@ typedef enum {
     TAG_PRIVATE_SIZEOF = 200,
     TAG_PRIVATE_ARRAY_LEN = 201,
     TAG_PRIVATE_FIELD_MASK = 202,
-} TagPrivateType : uint8_t;
+} TagPrivateType;
 
 typedef struct {
     uint32_t totalLen;

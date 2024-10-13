@@ -73,6 +73,7 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "tlv.h": "c"
+        "tlv.h": "c",
+        "stdbool.h": "c"
     }
 }

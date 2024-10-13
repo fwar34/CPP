@@ -26,7 +26,7 @@ typedef enum
 {
     TAG_QUHAO,
     TAG_PHONE,
-} TagPhoneNum : uint8_t;
+} TagPhoneNum;
 
 TlvFieldBegin(PhoneNum)
 TlvField(TAG_QUHAO, PhoneNum, quhao, FIELD_TYPE_STRING)
@@ -57,7 +57,7 @@ typedef enum
 {
     TAG_STRESS,
     TAG_ADDRESS_NAME,
-} TagAddress : uint8_t;
+} TagAddress;
 
 TlvFieldBegin(Address)
 TlvField(TAG_STRESS, Address, stress, FIELD_TYPE_4BYTE)
@@ -101,7 +101,7 @@ typedef enum
     TAG_ADDRESSLEN,
     TAG_DATA,
     TAG_DATALEN,
-} TagStudent : uint8_t;
+} TagStudent;
 
 TlvFieldBegin(Student)
 TlvField(TAG_NAME, Student, name, FIELD_TYPE_STRING)
@@ -141,6 +141,11 @@ typedef struct
     uint32_t a;
     uint16_t b;
 } Test;
+
+typedef enum {
+    TAG_A,
+    TAG_B,
+}
 
 TlvFieldBegin(Test)
 TlvField(Test, a, FIELD_TYPE_4BYTE)
