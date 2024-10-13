@@ -11,6 +11,7 @@ typedef enum
     TLV_ERROR_OK,
     TLV_ERROR_TAG,
     TLV_ERROR_TYPE,
+    TLV_ERROR_INVALID_LEN,
 } TlvError;
 
 #endif
