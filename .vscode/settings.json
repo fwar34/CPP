@@ -74,6 +74,7 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "tlv.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "charconv": "c"
     }
 }

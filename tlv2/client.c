@@ -83,8 +83,8 @@ static void TestStudent()
 void TestFunction()
 {
     Test test;
-    test.a = 112;
-    test.b = 113;
+    test.a = 0x12345678;
+    test.b = 0x1234;
     uint16_t len = 0;
     char* buffer = TlvEncode(Test, &test, &len);
 }

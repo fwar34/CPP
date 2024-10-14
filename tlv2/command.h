@@ -145,11 +145,11 @@ typedef struct
 typedef enum {
     TAG_A,
     TAG_B,
-}
+} TestTag; 
 
 TlvFieldBegin(Test)
-TlvField(Test, a, FIELD_TYPE_4BYTE)
-TlvField(Test, b, FIELD_TYPE_2BYTE)
+TlvField(TAG_A, Test, a, FIELD_TYPE_4BYTE)
+TlvField(TAG_B, Test, b, FIELD_TYPE_2BYTE)
 TlvFieldEnd(Test)
 
 #endif

@@ -23,7 +23,7 @@ uint16_t GetStructTlvLen(FieldInfo* info, uint16_t infoLen, char* objAddress)
 {
     uint16_t len = 0;
     for (int i = 0; i < infoLen; ++i) {
-        if (IsNeedEncode(info->tag)) {
+        if (IsNeedEncode(info[i].tag)) {
             len += GetFieldTlvLen(&info[i], objAddress + info[i].offset);
         }
     }
@@ -101,7 +101,7 @@ uint16_t GetFieldTlvLen(FieldInfo* info, char* fieldAddress)
         return 0;
     }
 
-    return info->len;
+    return len;
 }
 
 static bool IsHostLittleEndian()
@@ -218,7 +218,7 @@ uint16_t EncodeStructTlv(FieldInfo* info, uint16_t infoLen, char* objAddress, ch
 {
     uint16_t len = 0;
     for (int i = 0; i < infoLen; ++i) {
-        if (IsNeedEncode(info->tag)) {
+        if (IsNeedEncode(info[i].tag)) {
             len += EncodeFieldTlv(&info[i], objAddress + info[i].offset, out + len);
         }
     }
