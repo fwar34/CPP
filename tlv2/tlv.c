@@ -184,7 +184,9 @@ uint16_t EncodeFieldTlv(FieldInfo* info, char* fieldAddress, char* out)
         if (!str) {
             break;
         }
-        memcpy(out, *(char **)fieldAddress, strlen(str) + 1);
+        uint16_t strLen = strlen(str) + 1;
+        memcpy(out, *(char **)fieldAddress, strLen);
+        len += strLen;
         break;
     }
     case FIELD_TYPE_BYTE_PTR:
@@ -209,7 +211,7 @@ uint16_t EncodeFieldTlv(FieldInfo* info, char* fieldAddress, char* out)
     }
 
     memcpy(origBuf, &info->tag, TAG_LEN); // tag
-    BufferChangeEndianCopy(out + TAG_LEN, (char*)&len, VALUE_LEN_LEN);
+    BufferChangeEndianCopy(origBuf + TAG_LEN, (char*)&len, VALUE_LEN_LEN);
 
     return len;
 }
