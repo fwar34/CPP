@@ -49,7 +49,7 @@ uint16_t GetFieldTlvLen(FieldInfo* info, char* fieldAddress)
         prev = info - 1; // 宏定义保证-1位置存在 FieldInfo
         arrayLen = info->len / prev->len;
         for (int i = 0; i < arrayLen; ++i) { // prev->len 是数组单个元素字节大小
-            info->len += GetStructTlvLen(info->fieldInfo, info->fieldInfoLen,
+            len += GetStructTlvLen(info->fieldInfo, info->fieldInfoLen,
                 fieldAddress + prev->len * i);
         }
         break;
@@ -135,7 +135,7 @@ uint16_t EncodeFieldTlv(FieldInfo* info, char* fieldAddress, char* out)
     char* origBuf = out;
     uint32_t arrayLen = 0;
     uint16_t encodeLen = 0;
-    uint16_t len = TAG_LEN + VALUE_LEN_LEN; // tag+len 长度
+    uint16_t len = 0; // tag+len 长度
     out += TAG_LEN + VALUE_LEN_LEN;
 
     switch (info->type) // value
@@ -213,7 +213,7 @@ uint16_t EncodeFieldTlv(FieldInfo* info, char* fieldAddress, char* out)
     memcpy(origBuf, &info->tag, TAG_LEN); // tag
     BufferChangeEndianCopy(origBuf + TAG_LEN, (char*)&len, VALUE_LEN_LEN);
 
-    return len;
+    return len + TAG_LEN + VALUE_LEN_LEN;
 }
 
 uint16_t EncodeStructTlv(FieldInfo* info, uint16_t infoLen, char* objAddress, char* out)

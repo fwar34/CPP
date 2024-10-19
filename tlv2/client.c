@@ -78,6 +78,7 @@ static void TestStudent()
         return;
     }
     ClientSend(buffer, len);
+    free(buffer);
 }
 
 void TestFunction()
@@ -89,11 +90,39 @@ void TestFunction()
     char* buffer = TlvEncode(Test, &test, &len);
 }
 
+void TestFunction2()
+{
+    Test2 test2;
+    Address addr[2] = {
+        {
+            .stress = 11,
+            .addressName = "addressName11",
+        },
+        {
+            .stress = 12,
+            .addressName = "addressName12",
+        }
+    };
+    test2.id = 222;
+    test2.address = addr;
+    test2.addressLen = 2;
+
+    uint16_t len = 0;
+    char *buffer = TlvEncode(Test2, &test2, &len);
+    if (!buffer) {
+        LOG_ERR("ElvEncode");
+        return;
+    }
+    ClientSend(buffer, len);
+    free(buffer);
+}
+
 //  nc -l -p 8888 | hexdump -e '16/1 "%02x " "\n"' 可以使用 nc 和 hexdump 来模拟 server，以16进制打印出收到的内容
 int main()
 {
-    TestFunction();
-    TestStudent();
+    // TestFunction();
+    TestFunction2();
+    // TestStudent();
 
     return 0;
 }

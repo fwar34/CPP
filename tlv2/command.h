@@ -152,4 +152,23 @@ TlvField(TAG_A, Test, a, FIELD_TYPE_4BYTE)
 TlvField(TAG_B, Test, b, FIELD_TYPE_2BYTE)
 TlvFieldEnd(Test)
 
+typedef struct
+{
+    uint32_t id;
+    Address* address;
+    uint32_t addressLen;
+} Test2;
+
+typedef enum
+{
+    TAG_TEST2_ID,
+    TAG_TEST2_ADDRESS,
+    TAG_TEST2_ADDRESSLEN,
+} Test2Tag;
+
+TlvFieldBegin(Test2)
+TlvField(TAG_TEST2_ID, Test2, id, FIELD_TYPE_4BYTE)
+TlvFieldStructPtr(TAG_TEST2_ADDRESS, Test2, address, Address, addressLen, TAG_TEST2_ADDRESSLEN, FIELD_TYPE_4BYTE)
+TlvFieldEnd(Test2)
+
 #endif
