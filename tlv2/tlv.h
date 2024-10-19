@@ -17,9 +17,6 @@
 
 #include <inttypes.h>
 
-#define MSG_VERSION 31111
-#define MSG_CMD 1
-
 #define TAG_LEN 1
 #define VALUE_LEN_LEN 2
 
@@ -144,8 +141,9 @@
 
 #define TlvFieldEnd(type) };
 
-#define TlvEncode(structType, objAddress, lenAddress) \
-    TlvEncodeImpl(structType##Info, ARRAY_LEN(structType##Info), (char *)(objAddress), lenAddress)
+#define TlvEncode(headerLen, structType, objAddress, lenAddress) \
+    TlvEncodeImpl(headerLen, structType##Info, ARRAY_LEN(structType##Info), \
+    (char *)(objAddress), lenAddress)
 #define TlvDecode(structType, objAddress, buffer, len) \
     TlvDecodeImpl(structType##Info, ARRAY_LEN(structType##Info), (char *)(objAddress), buffer, len)
 
@@ -203,14 +201,6 @@ typedef enum {
     TAG_PRIVATE_ARRAY_LEN = 201,
     TAG_PRIVATE_FIELD_MASK = 202,
 } TagPrivateType;
-
-typedef struct {
-    uint32_t totalLen;
-    uint16_t version;
-    uint16_t commandId;
-    uint32_t sequenceNo;
-    char checkNumber[16];
-} TlvHeader;
 
 /**
  * @brief 结构体中字段描述信息
@@ -270,13 +260,14 @@ uint16_t EncodeStructTlv(FieldInfo* info, uint16_t infoLen, char* objAddress, ch
 /**
  * @brief 序列化结构体
  * 
+ * @param headerLen 预留的消息头部大小
  * @param info 此结构体对应的 FieldInfo 数组
  * @param infoLen 此结构体对应的 FieldInfo 数组元素个数
  * @param objAddress 此结构体实例地址
  * @param len 返回序列化后的 buffer 长度
  * @return char* 返回序列化后的 buffer
  */
-char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, uint16_t* len);
+char* TlvEncodeImpl(uint16_t headerLen, FieldInfo* info, uint16_t infoLen, char* objAddress, uint16_t* len);
 /**
  * @brief 反序列化结构体字段
  * 

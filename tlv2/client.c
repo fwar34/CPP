@@ -12,6 +12,45 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+char* SerialTest(const Test* test, uint32_t* len)
+{
+    uint16_t bufLen = 0;
+    const char* buffer = TlvEncode(sizeof(TlvHeader), Test, test, &bufLen);
+    if (!buffer) {
+        return NULL;
+    }
+
+    SerialTlvHeader(buffer, len, MSG_VERSION, CMD_TEST, g_sequenceNo++);
+    *len = bufLen;
+    return buffer;
+}
+
+char* SerialTest2(const Test2* test2, uint32_t* len)
+{
+    uint16_t bufLen = 0;
+    const char* buffer = TlvEncode(sizeof(TlvHeader), Test2, test2, &bufLen);
+    if (!buffer) {
+        return NULL;
+    }
+
+    SerialTlvHeader(buffer, len, MSG_VERSION, CMD_TEST2, g_sequenceNo++);
+    *len = bufLen;
+    return buffer;
+}
+
+char* SerialStudent(const Student* student, uint32_t* len)
+{
+    uint16_t bufLen = 0;
+    const char* buffer = TlvEncode(sizeof(TlvHeader), Student, student, &bufLen);
+    if (!buffer) {
+        return NULL;
+    }
+
+    SerialTlvHeader(buffer, len, MSG_VERSION, CMD_STUDENT, g_sequenceNo++);
+    *len = bufLen;
+    return buffer;
+}
+
 static int ClientSend(char* buffer, uint16_t len)
 {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -72,7 +111,8 @@ static void TestStudent()
     printf("read %zu bytes from ../data.bin\n", rsize);
     xiaoming.dataLen = rsize;
     uint16_t len = 0;
-    char *buffer = TlvEncode(Student, &xiaoming, &len);
+    // const char *buffer = TlvEncode(Student, &xiaoming, &len);
+    const char *buffer = SerialStudent(&xiaoming, &len);
     if (!buffer) {
         LOG_ERR("ElvEncode");
         return;
@@ -87,7 +127,9 @@ void TestFunction()
     test.a = 0x12345678;
     test.b = 0x1234;
     uint16_t len = 0;
-    char* buffer = TlvEncode(Test, &test, &len);
+    const char* buffer = SerialTest(&test, &len);
+    ClientSend(buffer, len);
+    free(buffer);
 }
 
 void TestFunction2()
@@ -108,11 +150,7 @@ void TestFunction2()
     test2.addressLen = 2;
 
     uint16_t len = 0;
-    char *buffer = TlvEncode(Test2, &test2, &len);
-    if (!buffer) {
-        LOG_ERR("ElvEncode");
-        return;
-    }
+    const char* buffer = SerialTest2(&test2, &len);
     ClientSend(buffer, len);
     free(buffer);
 }

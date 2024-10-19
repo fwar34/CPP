@@ -15,67 +15,36 @@
 
 #include "tlv.h"
 
+#define MSG_VERSION 31111
+#define CMD_TEST2 1
+#define CMD_STUDENT 2
+#define CMD_TEST 3
+
+typedef struct {
+    uint32_t totalLen;
+    uint16_t version;
+    uint16_t commandId;
+    uint32_t sequenceNo;
+    char checkNumber[16];
+} TlvHeader;
+
+extern uint32_t g_sequenceNo;
+void SerialTlvHeader(char* buffer, uint32_t totalLen, uint16_t version,
+    uint16_t commandId, uint32_t sequenceNo);
+
 typedef struct
 {
     char* quhao;
     char* phone;
 } PhoneNum;
-
-#if 1
-typedef enum
-{
-    TAG_QUHAO,
-    TAG_PHONE,
-} TagPhoneNum;
-
-TlvFieldBegin(PhoneNum)
-TlvField(TAG_QUHAO, PhoneNum, quhao, FIELD_TYPE_STRING)
-TlvField(TAG_PHONE, PhoneNum, phone, FIELD_TYPE_STRING)
-TlvFieldEnd(PhoneNum)
-#else
-FieldInfo PhoneNumInfo[2] =
-{
-    {
-        .tag = TAG_STRING,
-        .offset = OFFSET(PhoneNum, quhao),
-    },
-    {
-        .tag = TAG_STRING,
-        .offset = OFFSET(PhoneNum, phone)
-    }
-};
-#endif
+TlvImport(PhoneNum);
 
 typedef struct
 {
     int stress;
     char* addressName;
 } Address;
-
-#if 1
-typedef enum
-{
-    TAG_STRESS,
-    TAG_ADDRESS_NAME,
-} TagAddress;
-
-TlvFieldBegin(Address)
-TlvField(TAG_STRESS, Address, stress, FIELD_TYPE_4BYTE)
-TlvField(TAG_ADDRESS_NAME, Address, addressName, FIELD_TYPE_STRING)
-TlvFieldEnd(Address)
-#else
-FieldInfo AddressInfo[2] =
-{
-    {
-        .tag = TAG_INT,
-        .offset = OFFSET(Address, stress)
-    },
-    {
-        .tag = TAG_STRING,
-        .offset = OFFSET(Address, addressName)
-    }
-};
-#endif
+TlvImport(Address);
 
  // fieldMask 标识下面的字段哪个是生效的（bit位标识)，接收端收到后可根据此字段来识别发送端哪些字段是有效的
 typedef struct
@@ -89,68 +58,14 @@ typedef struct
     char* data;
     uint32_t dataLen;
 } Student;
-
-#if 1
-typedef enum
-{
-    TAG_FIELD_TYPE_MASK,
-    TAG_NAME,
-    TAG_AGE,
-    TAG_PHONENUM,
-    TAG_ADDRESS,
-    TAG_ADDRESSLEN,
-    TAG_DATA,
-    TAG_DATALEN,
-} TagStudent;
-
-TlvFieldBegin(Student)
-TlvField(TAG_NAME, Student, name, FIELD_TYPE_STRING)
-TlvField(TAG_AGE, Student, age, FIELD_TYPE_4BYTE)
-TlvFieldStruct(TAG_PHONENUM, Student, phoneNum, PhoneNum)
-TlvFieldStructPtr(TAG_ADDRESS, Student, address, Address, addressLen, TAG_ADDRESS_NAME, FIELD_TYPE_2BYTE)
-TlvFieldBytePtr(TAG_DATA, Student, data, dataLen, TAG_DATALEN, FIELD_TYPE_4BYTE)
-TlvFieldEnd(Student)
-#else
-FieldInfo StudentInfo[] = 
-{
-    {
-        .tag = TAG_STRING,
-        .offset = OFFSET(Student, name)
-    },
-    {
-        .tag = TAG_INT,
-        .offset = OFFSET(Student, age)
-    },
-    {
-        .tag = TAG_STRUCT,
-        .offset = OFFSET(Student, phoneNum),
-        .fieldInfo = PhoneNumInfo,
-        .fieldInfoLen = sizeof(PhoneNumInfo) / sizeof(PhoneNumInfo[0])
-    },
-    {
-        .tag = TAG_STRUCT,
-        .offset = OFFSET(Student, address),
-        .fieldInfo = AddressInfo,
-        .fieldInfoLen = sizeof(AddressInfo) / sizeof(AddressInfo[0])
-    }
-};
-#endif
+TlvImport(Student);
 
 typedef struct
 {
     uint32_t a;
     uint16_t b;
 } Test;
-
-typedef enum {
-    TAG_A,
-    TAG_B,
-} TestTag; 
-
-TlvFieldBegin(Test)
-TlvField(TAG_A, Test, a, FIELD_TYPE_4BYTE)
-TlvField(TAG_B, Test, b, FIELD_TYPE_2BYTE)
-TlvFieldEnd(Test)
+TlvImport(Test);
 
 typedef struct
 {
@@ -158,17 +73,6 @@ typedef struct
     Address* address;
     uint32_t addressLen;
 } Test2;
-
-typedef enum
-{
-    TAG_TEST2_ID,
-    TAG_TEST2_ADDRESS,
-    TAG_TEST2_ADDRESSLEN,
-} Test2Tag;
-
-TlvFieldBegin(Test2)
-TlvField(TAG_TEST2_ID, Test2, id, FIELD_TYPE_4BYTE)
-TlvFieldStructPtr(TAG_TEST2_ADDRESS, Test2, address, Address, addressLen, TAG_TEST2_ADDRESSLEN, FIELD_TYPE_4BYTE)
-TlvFieldEnd(Test2)
+TlvImport(Test2);
 
 #endif

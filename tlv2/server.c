@@ -28,6 +28,16 @@ static void DumpStudent(Student* student)
     fclose(file);
 }
 
+static void DumpTest2(const Test2* test2)
+{
+    printf("id = %d\n", test2->id);
+    printf("addressLen = %d\n", test2->addressLen);
+    for (int i = 0; i < test2->addressLen; ++i) {
+        printf("address[%d].stress = %d\n", i, test2->address[i].stress);
+        printf("address[%d].addressName = %s\n", i, test2->address[i].addressName);
+    }
+}
+
 static void FreeStudent(Student* student)
 {
     if (student->name) {
@@ -45,6 +55,18 @@ static void FreeStudent(Student* student)
     // if (student->address.addressName) {
     //     free(student->address.addressName);
     // }
+}
+
+static void FreeTest2(const Test2* test2)
+{
+    if (test2->address) {
+        for (int i = 0; i < test2->addressLen; ++i) {
+            if (test2->address[i].addressName) {
+                free(test2->address[i].addressName);
+            }
+        }
+        free(test2->address);
+    }
 }
 
 static void MoveBuffer(Buffer* buffer)
@@ -83,12 +105,19 @@ static int Process(Buffer* buffer)
 
         switch (tlvhdr.commandId)
         {
-        case MSG_CMD:
+        case CMD_STUDENT:
             Student student;
             TlvDecode(Student, &student, BufferReadBuf(buffer) + sizeof(TlvHeader), 
                 tlvhdr.totalLen - sizeof(TlvHeader));
             DumpStudent(&student);
             FreeStudent(&student);
+            break;
+        case CMD_TEST2:
+            Test2 test2;
+            TlvDecode(Test2, &test2, BufferReadBuf(buffer) + sizeof(TlvHeader), 
+                tlvhdr.totalLen - sizeof(TlvHeader));
+            DumpTest2(&test2);
+            FreeTest2(&test2);
             break;
         default:
             break;

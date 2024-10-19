@@ -227,27 +227,19 @@ uint16_t EncodeStructTlv(FieldInfo* info, uint16_t infoLen, char* objAddress, ch
     return len;
 }
 
-char* TlvEncodeImpl(FieldInfo* info, uint16_t infoLen, char* objAddress, uint16_t* len)
+char* TlvEncodeImpl(uint16_t headerLen, FieldInfo* info, uint16_t infoLen, char* objAddress, uint16_t* len)
 {
-    static uint32_t sequenceNo = 0;
-    uint16_t bufLen = sizeof(TlvHeader) + GetStructTlvLen(info, infoLen, objAddress);
+    uint16_t bufLen = headerLen + GetStructTlvLen(info, infoLen, objAddress);
     char* buffer = (char*)malloc(bufLen);
     if (!buffer) {
         printf("malloc failed! file(%s) line %d\n", __FILE__, __LINE__);
         return NULL;
     }
     memset(buffer, 0, bufLen);
-
-    TlvHeader* header = (TlvHeader*)buffer;
-    header->totalLen = htonl(bufLen);
-    header->version = htons(MSG_VERSION);
-    header->commandId = htons(MSG_CMD);
-    header->sequenceNo = htonl(sequenceNo++);
-
-    printf("sizeof(TlvHeader) = %zu\n", sizeof(TlvHeader));
-    char* bufTmp = buffer + sizeof(TlvHeader);
+    printf("sizeof(TlvHeader) = %zu\n", headerLen);
+    char* bufTmp = buffer + headerLen;
     uint16_t ret = EncodeStructTlv(info, infoLen, objAddress, bufTmp);
-    if (ret != bufLen - sizeof(TlvHeader)) {
+    if (ret != bufLen - headerLen) {
         LOG_ERR("TlvEncodeImpl");
         free(buffer);
         return NULL;
