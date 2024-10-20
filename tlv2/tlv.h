@@ -141,9 +141,9 @@
 
 #define TlvFieldEnd(type) };
 
-#define TlvEncode(headerLen, structType, objAddress, lenAddress) \
+#define TlvEncode(headerLen, structType, objAddress, lenAddress)            \
     TlvEncodeImpl(headerLen, structType##Info, ARRAY_LEN(structType##Info), \
-    (char *)(objAddress), lenAddress)
+                  (char *)(objAddress), lenAddress)
 #define TlvDecode(structType, objAddress, buffer, len) \
     TlvDecodeImpl(structType##Info, ARRAY_LEN(structType##Info), (char *)(objAddress), buffer, len)
 
