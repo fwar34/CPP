@@ -24,7 +24,8 @@
 #define OFFSET(structType, field) (uintptr_t)(&(((structType*)0)->field))
 #define STRUCT_FIELD_SIZE(structType, field) sizeof(((structType*)0)->field)
 
-#define TlvImport(structType) extern FieldInfo structType##Info[]
+#define TlvImport(structType) extern FieldInfo structType##Info[]; \
+    extern uint16_t g_##structType##InfoLen;
 #define TlvFieldBegin(structType) FieldInfo structType##Info[] = {
 /**
  * @brief 普通字段使用
@@ -139,13 +140,14 @@
         .offset = OFFSET(structType, fieldName),                      \
     },
 
-#define TlvFieldEnd(type) };
+#define TlvFieldEnd(structType) };\
+    uint16_t g_##structType##InfoLen = ARRAY_LEN(structType##Info);
 
-#define TlvEncode(headerLen, structType, objAddress, lenAddress)            \
-    TlvEncodeImpl(headerLen, structType##Info, ARRAY_LEN(structType##Info), \
+#define TlvEncode(headerLen, structType, objAddress, lenAddress)      \
+    TlvEncodeImpl(headerLen, structType##Info, g_##structType##InfoLen, \
                   (char *)(objAddress), lenAddress)
 #define TlvDecode(structType, objAddress, buffer, len) \
-    TlvDecodeImpl(structType##Info, ARRAY_LEN(structType##Info), (char *)(objAddress), buffer, len)
+    TlvDecodeImpl(structType##Info, g_##structType##InfoLen, (char *)(objAddress), buffer, len)
 
 /**
  * @brief ptr 字段对应长度字段可以定义 1~8 字节长度, 正常时不可能超过 UINT32_MAX，
@@ -156,16 +158,16 @@
     switch (size)                           \
     {                                       \
     case 1:                                 \
-        arrayLen = *(uint8_t *)buf;         \
+        arrayLen = *(uint8_t *)(buf);       \
         break;                              \
     case 2:                                 \
-        arrayLen = *(uint16_t *)buf;        \
+        arrayLen = *(uint16_t *)(buf);      \
         break;                              \
     case 4:                                 \
-        arrayLen = *(uint32_t *)buf;        \
+        arrayLen = *(uint32_t *)(buf);      \
         break;                              \
     case 8:                                 \
-        arrayLen = *(uint64_t *)buf;        \
+        arrayLen = *(uint64_t *)(buf);      \
         break;                              \
     default:                                \
         LOG_ERR("ConvertBuf2Len");          \

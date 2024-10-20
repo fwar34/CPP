@@ -25,7 +25,7 @@ typedef struct {
     uint16_t version;
     uint16_t commandId;
     uint32_t sequenceNo;
-    char checkNumber[16];
+    // char checkNumber[16];
 } TlvHeader;
 
 extern uint32_t g_sequenceNo;
@@ -69,7 +69,7 @@ TlvImport(Test);
 
 typedef struct
 {
-    uint32_t id;
+    // uint32_t id;
     Address* address;
     uint32_t addressLen;
 } Test2;

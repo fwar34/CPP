@@ -6,6 +6,8 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 
+// static void ConvertBuf2Len(arrayLen, lenBuf, prev->len);
+
 static bool IsNeedEncode(uint8_t tag)
 {
     switch (tag)
@@ -256,10 +258,8 @@ int DecodeFieldTlv(FieldInfo* info, char* fieldAddress, char* buffer, uint32_t l
     uint32_t arrayLen = 0;
     uint8_t tag = *buffer;
     buffer += TAG_LEN;
-    // len -= TAG_LEN;
     uint16_t valueLen = ntohs(*(uint16_t*)buffer);
     buffer += VALUE_LEN_LEN;
-    // len -= VALUE_LEN_LEN;
 
     switch (info->type)
     {
@@ -290,9 +290,11 @@ int DecodeFieldTlv(FieldInfo* info, char* fieldAddress, char* buffer, uint32_t l
             valueLen = ntohs(*(uint16_t*)(buffer + TAG_LEN));
             uint16_t tlvLen = TAG_LEN + VALUE_LEN_LEN + valueLen;
             DecodeStructTlv(info->fieldInfo, info->fieldInfoLen,
-                fieldAddress + prev->type * i, buffer, tlvLen);
+                tmp + info->len * i, buffer, tlvLen);
             buffer += tlvLen;
         }
+        // 给 ptr 字段赋值
+        memcpy(fieldAddress, &tmp, sizeof(char*));
         break;
     case FIELD_TYPE_1BYTE:
     case FIELD_TYPE_2BYTE:

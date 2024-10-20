@@ -20,7 +20,8 @@ char* SerialTest(const Test* test, uint32_t* len)
         return NULL;
     }
 
-    SerialTlvHeader(buffer, len, MSG_VERSION, CMD_TEST, g_sequenceNo++);
+    bufLen += TAG_LEN + VALUE_LEN_LEN;
+    SerialTlvHeader(buffer, bufLen, MSG_VERSION, CMD_TEST, g_sequenceNo++);
     *len = bufLen;
     return buffer;
 }
@@ -33,7 +34,8 @@ char* SerialTest2(const Test2* test2, uint32_t* len)
         return NULL;
     }
 
-    SerialTlvHeader(buffer, len, MSG_VERSION, CMD_TEST2, g_sequenceNo++);
+    bufLen += TAG_LEN + VALUE_LEN_LEN;
+    SerialTlvHeader(buffer, bufLen, MSG_VERSION, CMD_TEST2, g_sequenceNo++);
     *len = bufLen;
     return buffer;
 }
@@ -45,8 +47,9 @@ char* SerialStudent(const Student* student, uint32_t* len)
     if (!buffer) {
         return NULL;
     }
-
-    SerialTlvHeader(buffer, len, MSG_VERSION, CMD_STUDENT, g_sequenceNo++);
+    
+    bufLen += TAG_LEN + VALUE_LEN_LEN;
+    SerialTlvHeader(buffer, bufLen, MSG_VERSION, CMD_STUDENT, g_sequenceNo++);
     *len = bufLen;
     return buffer;
 }
@@ -135,19 +138,19 @@ void TestFunction()
 void TestFunction2()
 {
     Test2 test2;
-    Address addr[2] = {
-        {
-            .stress = 11,
-            .addressName = "addressName11",
-        },
+    Address addr[1] = {
+        // {
+        //     .stress = 11,
+        //     .addressName = "addressName111",
+        // },
         {
             .stress = 12,
             .addressName = "addressName12",
         }
     };
-    test2.id = 222;
+    // test2.id = 222;
     test2.address = addr;
-    test2.addressLen = 2;
+    test2.addressLen = 1;
 
     uint16_t len = 0;
     const char* buffer = SerialTest2(&test2, &len);
