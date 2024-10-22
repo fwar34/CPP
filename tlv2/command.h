@@ -72,6 +72,7 @@ typedef struct
     uint32_t id;
     Address* address;
     uint32_t addressLen;
+    PhoneNum phoneNum[2];
 } Test2;
 TlvImport(Test2);
 

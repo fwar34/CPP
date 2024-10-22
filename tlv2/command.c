@@ -53,11 +53,13 @@ typedef enum
     TAG_TEST2_ID,
     TAG_TEST2_ADDRESS,
     TAG_TEST2_ADDRESSLEN,
+    TAG_TEST2_PHONENUM,
 } Test2Tag;
 TlvFieldBegin(Test2)
 TlvField(TAG_TEST2_ID, Test2, id, FIELD_TYPE_4BYTE)
 TlvFieldStructPtr(TAG_TEST2_ADDRESS, Test2, address, Address, 
     addressLen, TAG_TEST2_ADDRESSLEN, FIELD_TYPE_4BYTE)
+TlvFieldStructArray(TAG_PHONENUM, Test2, phoneNum, PhoneNum)
 TlvFieldEnd(Test2)
 
 uint32_t g_sequenceNo = 0;

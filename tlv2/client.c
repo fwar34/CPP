@@ -152,6 +152,11 @@ void TestFunction2()
     test2.address = addr;
     test2.addressLen = 2;
 
+    test2.phoneNum[0].quhao = "quhao000";
+    test2.phoneNum[0].phone = "phone0000";
+    test2.phoneNum[1].quhao = "quhao111";
+    test2.phoneNum[1].phone = "phone1111";
+
     uint16_t len = 0;
     const char* buffer = SerialTest2(&test2, &len);
     ClientSend(buffer, len);
