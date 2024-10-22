@@ -138,19 +138,19 @@ void TestFunction()
 void TestFunction2()
 {
     Test2 test2;
-    Address addr[1] = {
-        // {
-        //     .stress = 11,
-        //     .addressName = "addressName111",
-        // },
+    Address addr[2] = {
+        {
+            .stress = 11,
+            .addressName = "addressName111",
+        },
         {
             .stress = 12,
             .addressName = "addressName12",
         }
     };
-    // test2.id = 222;
+    test2.id = 222;
     test2.address = addr;
-    test2.addressLen = 1;
+    test2.addressLen = 2;
 
     uint16_t len = 0;
     const char* buffer = SerialTest2(&test2, &len);

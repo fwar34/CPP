@@ -30,7 +30,7 @@ static void DumpStudent(Student* student)
 
 static void DumpTest2(const Test2* test2)
 {
-    // printf("id = %d\n", test2->id);
+    printf("id = %d\n", test2->id);
     printf("addressLen = %d\n", test2->addressLen);
     for (int i = 0; i < test2->addressLen; ++i) {
         printf("address[%d].stress = %d\n", i, test2->address[i].stress);

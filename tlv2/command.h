@@ -69,7 +69,7 @@ TlvImport(Test);
 
 typedef struct
 {
-    // uint32_t id;
+    uint32_t id;
     Address* address;
     uint32_t addressLen;
 } Test2;

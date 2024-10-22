@@ -202,6 +202,7 @@ typedef enum {
     TAG_PRIVATE_SIZEOF = 200,
     TAG_PRIVATE_ARRAY_LEN = 201,
     TAG_PRIVATE_FIELD_MASK = 202,
+    TAG_PRIVATE_STRUCT = 203,
 } TagPrivateType;
 
 /**
