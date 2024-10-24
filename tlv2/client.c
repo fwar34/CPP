@@ -14,43 +14,45 @@
 
 char* SerialTest(const Test* test, uint32_t* len)
 {
-    uint16_t bufLen = 0;
-    const char* buffer = TlvEncode(sizeof(TlvHeader), Test, test, &bufLen);
+    const char* buffer = TlvEncode(sizeof(TlvHeader), Test, test, len);
     if (!buffer) {
         return NULL;
     }
 
-    bufLen += TAG_LEN + VALUE_LEN_LEN;
-    SerialTlvHeader(buffer, bufLen, MSG_VERSION, CMD_TEST, g_sequenceNo++);
-    *len = bufLen;
+    SerialTlvHeader(buffer, *len, MSG_VERSION, CMD_TEST, g_sequenceNo++);
     return buffer;
 }
 
 char* SerialTest2(const Test2* test2, uint32_t* len)
 {
-    uint16_t bufLen = 0;
-    const char* buffer = TlvEncode(sizeof(TlvHeader), Test2, test2, &bufLen);
+    const char* buffer = TlvEncode(sizeof(TlvHeader), Test2, test2, len);
     if (!buffer) {
         return NULL;
     }
 
-    bufLen += TAG_LEN + VALUE_LEN_LEN;
-    SerialTlvHeader(buffer, bufLen, MSG_VERSION, CMD_TEST2, g_sequenceNo++);
-    *len = bufLen;
+    SerialTlvHeader(buffer, *len, MSG_VERSION, CMD_TEST2, g_sequenceNo++);
+    return buffer;
+}
+
+char* SerialTest3(const Test3* test3, uint32_t* len)
+{
+    const char* buffer = TlvEncode(sizeof(TlvHeader), Test3, test3, len);
+    if (!buffer) {
+        return NULL;
+    }
+
+    SerialTlvHeader(buffer, *len, MSG_VERSION, CMD_TEST3, g_sequenceNo++);
     return buffer;
 }
 
 char* SerialStudent(const Student* student, uint32_t* len)
 {
-    uint16_t bufLen = 0;
-    const char* buffer = TlvEncode(sizeof(TlvHeader), Student, student, &bufLen);
+    const char* buffer = TlvEncode(sizeof(TlvHeader), Student, student, len);
     if (!buffer) {
         return NULL;
     }
     
-    bufLen += TAG_LEN + VALUE_LEN_LEN;
-    SerialTlvHeader(buffer, bufLen, MSG_VERSION, CMD_STUDENT, g_sequenceNo++);
-    *len = bufLen;
+    SerialTlvHeader(buffer, *len, MSG_VERSION, CMD_STUDENT, g_sequenceNo++);
     return buffer;
 }
 
@@ -159,6 +161,20 @@ void TestFunction2()
 
     uint16_t len = 0;
     const char* buffer = SerialTest2(&test2, &len);
+    ClientSend(buffer, len);
+    free(buffer);
+}
+
+void TestFunction3()
+{
+    Test3 test3;
+    test3.phoneNum[0].quhao = "quhao000";
+    test3.phoneNum[0].phone = "phone0000";
+    test3.phoneNum[1].quhao = "quhao111";
+    test3.phoneNum[1].phone = "phone1111";
+
+    uint16_t len = 0;
+    const char* buffer = SerialTest3(&test3, &len);
     ClientSend(buffer, len);
     free(buffer);
 }

@@ -59,8 +59,16 @@ TlvFieldBegin(Test2)
 TlvField(TAG_TEST2_ID, Test2, id, FIELD_TYPE_4BYTE)
 TlvFieldStructPtr(TAG_TEST2_ADDRESS, Test2, address, Address, 
     addressLen, TAG_TEST2_ADDRESSLEN, FIELD_TYPE_4BYTE)
-TlvFieldStructArray(TAG_PHONENUM, Test2, phoneNum, PhoneNum)
+TlvFieldStructArray(TAG_TEST2_PHONENUM, Test2, phoneNum, PhoneNum)
 TlvFieldEnd(Test2)
+
+typedef enum
+{
+    TAG_TEST3_PHONENUM,
+} Test3Tag;
+TlvFieldBegin(Test3)
+TlvFieldStructArray(TAG_TEST3_PHONENUM, Test3, phoneNum, PhoneNum)
+TlvFieldEnd(Test3)
 
 uint32_t g_sequenceNo = 0;
 void SerialTlvHeader(char* buffer, uint32_t totalLen, uint16_t version,

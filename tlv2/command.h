@@ -16,9 +16,10 @@
 #include "tlv.h"
 
 #define MSG_VERSION 31111
-#define CMD_TEST2 1
-#define CMD_STUDENT 2
-#define CMD_TEST 3
+#define CMD_TEST 1
+#define CMD_TEST2 2
+#define CMD_TEST3 3
+#define CMD_STUDENT 4
 
 typedef struct {
     uint32_t totalLen;
@@ -75,5 +76,11 @@ typedef struct
     PhoneNum phoneNum[2];
 } Test2;
 TlvImport(Test2);
+
+typedef struct
+{
+    PhoneNum phoneNum[2];
+} Test3;
+TlvImport(Test3);
 
 #endif

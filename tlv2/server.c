@@ -36,6 +36,29 @@ static void DumpTest2(const Test2* test2)
         printf("address[%d].stress = %d\n", i, test2->address[i].stress);
         printf("address[%d].addressName = %s\n", i, test2->address[i].addressName);
     }
+
+    for (int i = 0; i < 2; ++i) {
+        if (test2->phoneNum[i].quhao) 
+            printf("phoneNum[%d].quhao = %s\n", i, test2->phoneNum[i].quhao);
+        if (test2->phoneNum[i].phone) 
+            printf("phoneNum[%d].phone = %s\n", i, test2->phoneNum[i].phone);
+    }
+}
+
+static void DumpTest3(const Test3* test3)
+{
+    for (int i = 0; i < 2; ++i) {
+        if (test3->phoneNum[i].quhao) 
+            printf("phoneNum[%d].quhao = %s\n", i, test3->phoneNum[i].quhao);
+        if (test3->phoneNum[i].phone) 
+            printf("phoneNum[%d].phone = %s\n", i, test3->phoneNum[i].phone);
+    }
+}
+
+static void DumpTest(const Test* test)
+{
+    printf("test.a = 0x%x\n", test->a);
+    printf("test.b = 0x%x\n", test->b);
 }
 
 static void FreeStudent(Student* student)
@@ -67,8 +90,28 @@ static void FreeTest2(const Test2* test2)
         }
         free(test2->address);
     }
+
+    for (int i = 0; i < 2; i++) {
+        if (test2->phoneNum[i].quhao) {
+            free(test2->phoneNum[i].quhao);
+        }
+        if (test2->phoneNum[i].phone) {
+            free(test2->phoneNum[i].phone);
+        }
+    }
 }
 
+static void FreeTest3(const Test3* test3)
+{
+    for (int i = 0; i < 2; i++) {
+        if (test3->phoneNum[i].quhao) {
+            free(test3->phoneNum[i].quhao);
+        }
+        if (test3->phoneNum[i].phone) {
+            free(test3->phoneNum[i].phone);
+        }
+    }
+}
 static void MoveBuffer(Buffer* buffer)
 {
     uint remainLen = BufferReadableCount(buffer);
@@ -119,6 +162,17 @@ static int Process(Buffer* buffer)
             DumpTest2(&test2);
             FreeTest2(&test2);
             break;
+        case CMD_TEST:
+            Test test;
+            TlvDecode(Test, &test, BufferReadBuf(buffer) + sizeof(TlvHeader), 
+                tlvhdr.totalLen - sizeof(TlvHeader));
+            DumpTest(&test);
+        case CMD_TEST3:
+            Test3 test3;
+            TlvDecode(Test3, &test3, BufferReadBuf(buffer) + sizeof(TlvHeader), 
+                tlvhdr.totalLen - sizeof(TlvHeader));
+            DumpTest3(&test3);
+            FreeTest3(&test3);
         default:
             break;
         }
@@ -187,5 +241,5 @@ int main()
 {
     Start();
 
-    return 01;
+    return 0;
 }
